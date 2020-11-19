@@ -77,6 +77,7 @@ class Grid():
             state.append(idx[i] * dx + self.min[i])
         return state
 
+
 class GridData(Grid):
     '''Combined object with grid and corresponding data'''
 
@@ -158,7 +159,7 @@ class GridData(Grid):
 
         return interpn(points, self.data, x, method=method)[0]
 
-    def sublevel_set_idx(self, level=0):
+    def sublevel_set_idx(self, level=0.0):
         """Return sublevel set incl. boundary (non-strict sublevel set)
         """
         index_array = np.where(self.data <= level)
@@ -168,7 +169,7 @@ class GridData(Grid):
             indices.append(tuple(curr_index))
         return indices
 
-    def superlevel_set_idx(self, level=0):
+    def superlevel_set_idx(self, level=0.0):
         """Return superlevel set incl. boundary (non-strict superlevel
         set)"""
         index_array = np.where(self.data >= level)
