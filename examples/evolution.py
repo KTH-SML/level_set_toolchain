@@ -15,10 +15,6 @@ import pylevel
 if __name__ == '__main__':
     wrapper = pylevel.wrapper.LevelSetWrapper(dataset=pylevel.datasets.LevelSet.Drone)
 
-    #t = 5
-    #states = wrapper.get_reachable_set_at_time(t)
-    #pylevel.utilities.visualise_2d(wrapper, states, t)
-
     # Test sequence of sets
     t_idx = numpy.linspace(0,1,10)
     sets = [wrapper.get_reachable_set_at_time(t) for t in t_idx]
