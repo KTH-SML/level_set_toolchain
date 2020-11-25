@@ -47,3 +47,13 @@ In order to globally install the Python package referencing the local `resources
 pip install -e .
 ```
 
+
+### Add custom dataset
+In order to add your own generated dataset simply follow the following steps.
+
+1. Generate the dataset in MATLAB and store the `your_file.m` file under `./resources/your_name/your_file.m'
+2. Add an entry to the Python module 'datasets.py' in the 'pylevel' package.
+    - Add an enumeration entry
+    - Add a path entry from the new enumeration
+
+All provided loader scripts will then automatically fetch the corresponding file whenever the loader receives your new `LevelSet` enumeration type as argument.
