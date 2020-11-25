@@ -17,11 +17,11 @@ __status__ = "Development"
 class Grid():
     '''Python object version of HJB toolbox grids'''
 
-    def __init__(self, matlab_g):
+    def __init__(self, grid):
         '''Fills object based on input matlab grid numpy array imported by
         scipy.io.loadmat
         '''
-        g = matlab_g[0][0]
+        g = grid[0][0]
         # dimension of state space
         self.dim = g[0][0][0]
         # min grid corner
@@ -79,11 +79,14 @@ class Grid():
 
 
 class GridData(Grid):
-    '''Combined object with grid and corresponding data'''
+    ''' Encapsulates functions for both grid and data functions on
+        imported MATLAB data.
 
-    def __init__(self, matlab_g, matlab_data):
-        Grid.__init__(self, matlab_g)
-        self.data = matlab_data
+    '''
+
+    def __init__(self, grid, data):
+        Grid.__init__(self, grid)
+        self.data = data
 
         self._augmentPeriodicData()
 
@@ -116,6 +119,7 @@ class GridData(Grid):
 
     def get_raw_value(self, x):
         idx = self.get_idx(x)
+
         return self.data[idx]
 
     def get_interp_value(self, x, method='linear'):
