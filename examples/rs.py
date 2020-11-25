@@ -13,9 +13,9 @@ from grid import GridData
 
 path = os.path.dirname(os.path.abspath(__file__))
 # for RS example
-quad_BRS_file = path + "/../cached_rs/quad4D/low_res_BRS.mat"
+quad_BRS_file = path + "/../resources/quad4D/low_res_BRS.mat"
 # for TTR and grad example
-svea_file = path + "/../cached_rs/svea/TTR_and_grad.mat"
+svea_file = path + "/../resources/svea/TTR_and_grad.mat"
 
 def main():
     # load from MATLAB files

@@ -1,10 +1,13 @@
 #!/usr/bin/env python
-
 """
 Examples of working with value function solutions to the HJI inequality
 over time, and with a value function that has been optimized across time
 already. quad4D BRS is a backward reach set, SVEA TTR is the set of
 minimum time to reach an avoid set.
+
+Author: Frank Jiang, Stockholm 2020
+Author: Philipp Rothenhäusler, Stockholm 2020
+
 """
 
 import os
@@ -14,11 +17,11 @@ from scipy.spatial import ConvexHull
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-muted')
 
-from grid import Grid, GridData
+import pylevel
 
 path = os.path.dirname(os.path.abspath(__file__))
 # for RS example
-quad_BRS_file = path + "/../cached_rs/quad4D/low_res_BRS.mat"
+quad_BRS_file = path + "/../resources/quad4D/low_res_BRS.mat"
 
 def build_state_to_reachset_dict(BRS_list, in_reach_set_idx):
     # TODO: too slow
@@ -88,13 +91,13 @@ def main():
     print('# Building Reachable Sets')
     # RS solutions over time for quadrotor in 2D plane
     BRS_grid = quad_BRS_data['g']
-    grid_helper = Grid(BRS_grid)
+    grid_helper = pylevel.grid.Grid(BRS_grid)
     BRS_val_funcs = quad_BRS_data['BRS_data'] # one valfunc per time step
     BRS_times = quad_BRS_data['BRS_time'].tolist()[0]
     BRS_list = []
     in_reach_set_idx = [] # list of list of indices inside reach set
     for i in range(len(BRS_times)):
-        BRS = GridData(BRS_grid, BRS_val_funcs[:, :, :, :, i])
+        BRS = pylevel.grid.GridData(BRS_grid, BRS_val_funcs[:, :, :, :, i])
         BRS_list.append(BRS)
         # 1 - in sublevel set, 0 - not in sublevel set
         in_reach_set_idx.append(BRS.sublevel_set_idx(level=0.0))
@@ -119,8 +122,11 @@ def main():
         plt.xlabel("x [m]")
         plt.ylabel("y [m]")
         plt.plot(xy_pts[:,0], xy_pts[:,1], 'ko')
-        for simplex in convex_hull.simplices:
-            plt.plot(xy_pts[simplex, 0], xy_pts[simplex, 1], 'k-')
+        hull_set = convex_hull.points
+        hull_vertices = np.stack(
+                [hull_set[idx] for idx in convex_hull.vertices], axis=1)
+        plt.scatter(*hull_vertices.tolist() , c='g', s=200)
+        plt.plot(*hull_vertices.tolist(), 'r--', linewidth=3, alpha=0.3)
         plt.imshow(img, "gray", alpha = 0.4)
         plt.show()
     else:
