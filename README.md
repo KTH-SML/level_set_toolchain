@@ -10,18 +10,17 @@ sublevel set corresponds to your desired reachable set.
 Then, you save the solutions in MATLAB and can use the Python interface to access them.
 
 ## Overview
-- [Usage](#usage)
 - [Setup](#setup)
+- [MATLAB Toolbox documentation](https://www.cs.ubc.ca/~mitchell/ToolboxLS/toolboxLS-1.1.pdf).
+- [Python examples](./examples)
 
-## Usage
+## Setup
+This repository consists of both a Python package and a MATLAB example script.
+We first go through the setup and usage of the MATLAB Level Set Toolbox and then introduce our Python wrapper with examples.
 
+### MATLAB - Computing reachable sets
 For detailed documentation about boundary conditions, general notation and usage of the MATLAB toolbox, please refer to [Documentation of MATLAB Toolbox](https://www.cs.ubc.ca/~mitchell/ToolboxLS/toolboxLS-1.1.pdf).
 
-For usage examples of the Python wrapper see
-- [Levelsets at time](examples/timed_levelsets.py)
-- [Convexified levelset](examples/convexified.py)
-
-### Computing reachable sets in MATLAB
 
 Currently, the most stable toolbox for computing solutions to the HJI inequality
 is still the Level Set Toolbox. To start computing reachable sets with the Level
@@ -44,26 +43,25 @@ This script will save the information required to extract out the reachable sets
 These examples have presets just to be illustrative, go ahead and change them
 to match the requirements of your project.
 
-### Using levelsets in Python
-
-Since it is typically inconvenient to use MATLAB in most robotics or hardware-based control projects, we have written a simple Python interface for working with the output of the Level Set Toolbox and helperOC.
-Once you have computed the reachable sets of interest, you can load them into Python using scipy's `loadmat` function and then contstruct a `GridData` object using the data.
-The `GridData` class is defined in `py_interface/grid.py`.
-In addition to allowing you to access the data in the MATLAB outputs, the `GridData` also includes some methods for interporating the data, computing the sub- or super-level sets (which correspond to reachable sets, depending on your formulation), etc. Again, we have provided a basic example of using the `GridData` class on varying reachable set representations. See `py_interface/rs_example.py` for more details.
-
-**Todo**:
-- Generate documentation and link example scripts
-
-
-## Setup
-
-In order to globally install the Python package referencing the local `resources` directory execute
+### Python - Using levelsets
+In order to globally install the Python package referencing the local `resources` directory execute the following in the root directory of this repository
 ```bash
 pip install -e .
 ```
 
+**Basic package structure:**
 
-### Add custom dataset
+Since it is typically inconvenient to use MATLAB in most robotics or hardware-based control projects, we have written a simple Python interface for working with the output of the Level Set Toolbox and helperOC.
+Once you have computed the reachable sets of interest, you can load them into Python using scipy's `loadmat` function and then contstruct a `GridData` object using the data.
+
+You can find all Python classes in the package `pylevel`.
+The package `pylevel` is composed of a wrapper, which is a subclass of the `loader` to load the ma file from MATLAB.
+This wrapper class creates sublevel instances of the GridData class to facilitate convenient access to value functions across grid indices.
+
+You can find some basic examples of how to use the `pylevel` package under `./examples`.
+
+
+### Python - Add custom dataset
 In order to add your own generated dataset simply follow the following steps.
 
 1. Generate the dataset in MATLAB and store the `your_file.m` file under `./resources/your_name/your_file.m`
@@ -73,3 +71,10 @@ In order to add your own generated dataset simply follow the following steps.
 3. Instantiate the Loader with the `dataset=pylevel.datasets.LevelSet.YourName` argument
 
 All provided loader scripts will then automatically fetch the corresponding file whenever the loader receives your new `LevelSet` enumeration type as the argument `dataset`.
+
+For usage examples of the Python wrapper see
+- [Levelsets at time](examples/timed_levelsets.py)
+- [Convexified levelset](examples/convexified.py)
+
+## Contribution
+If you have found things to improve of you have questions, please create a pull request to let us know.
