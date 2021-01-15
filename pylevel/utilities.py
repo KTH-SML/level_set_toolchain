@@ -17,8 +17,11 @@ __email__ = "fjiang@kth.se "
 __status__ = "Development"
 
 
-def visualise_2d(wrapper, states, time, show=True, show_image=False):
+def visualise_2d(wrapper, states, time,
+        show=True, show_image=False, **plot_options):
     grid_helper = wrapper.grid_helper
+    options = dict(c=numpy.random.rand(3,),linewidth=3, alpha=0.3)
+    options.update(plot_options)
 
     convex_hull = ConvexHull(states)
 
@@ -28,7 +31,7 @@ def visualise_2d(wrapper, states, time, show=True, show_image=False):
         img = hull_img(convex_hull, img_width, img_height)
         plt.imshow(img, "gray", alpha = 0.4)
 
-    t_str = "t={} [s]".format(time)
+    t_str = "t={} [s]".format(numpy.around(time,2))
     plt.title("Convex Hull of Backward Reach Set at " + t_str)
     plt.xlabel("x [m]")
     plt.ylabel("y [m]")
@@ -37,14 +40,19 @@ def visualise_2d(wrapper, states, time, show=True, show_image=False):
     hull_set = convex_hull.points
     hull_vertices = numpy.stack(
             [hull_set[idx] for idx in convex_hull.vertices], axis=1)
+    plt.legend()
+    plt.fill(*hull_vertices.tolist(), label='Levelset_{}'.format(t_str), **options)
     plt.scatter(*hull_vertices.tolist(), c='g', s=200)
-    plt.plot(*hull_vertices.tolist(), 'r--', linewidth=3, alpha=0.3)
+    plt.plot(*hull_vertices.tolist(), '--',**options)
 
     if show:
-        plt.show()
+        show_plots()
 
+def show_plots_for_time(time_in_seconds):
+    plt.pause(time_in_seconds)
 
 def show_plots():
+    plt.grid()
     plt.show()
 
 
