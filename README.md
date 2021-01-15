@@ -9,7 +9,19 @@ Hamilton-Jacobi-Isaacs (HJI) inequality, yielding us value functions whose zero
 sublevel set corresponds to your desired reachable set.
 Then, you save the solutions in MATLAB and can use the Python interface to access them.
 
-## Computing reachable sets with the Level Set Method in MATLAB
+## Overview
+- [Usage](#usage)
+- [Setup](#setup)
+
+## Usage
+
+For detailed documentation about boundary conditions, general notation and usage of the MATLAB toolbox, please refer to [Documentation of MATLAB Toolbox](https://www.cs.ubc.ca/~mitchell/ToolboxLS/toolboxLS-1.1.pdf).
+
+For usage examples of the Python wrapper see
+- [Levelsets at time](examples/timed_levelsets.py)
+- [Convexified levelset](examples/convexified.py)
+
+### Computing reachable sets in MATLAB
 
 Currently, the most stable toolbox for computing solutions to the HJI inequality
 is still the Level Set Toolbox. To start computing reachable sets with the Level
@@ -32,15 +44,18 @@ This script will save the information required to extract out the reachable sets
 These examples have presets just to be illustrative, go ahead and change them
 to match the requirements of your project.
 
-## Working with computed solutions in Python
+### Using levelsets in Python
 
 Since it is typically inconvenient to use MATLAB in most robotics or hardware-based control projects, we have written a simple Python interface for working with the output of the Level Set Toolbox and helperOC.
 Once you have computed the reachable sets of interest, you can load them into Python using scipy's `loadmat` function and then contstruct a `GridData` object using the data.
 The `GridData` class is defined in `py_interface/grid.py`.
 In addition to allowing you to access the data in the MATLAB outputs, the `GridData` also includes some methods for interporating the data, computing the sub- or super-level sets (which correspond to reachable sets, depending on your formulation), etc. Again, we have provided a basic example of using the `GridData` class on varying reachable set representations. See `py_interface/rs_example.py` for more details.
 
+**Todo**:
+- Generate documentation and link example scripts
 
-### Setup
+
+## Setup
 
 In order to globally install the Python package referencing the local `resources` directory execute
 ```bash
