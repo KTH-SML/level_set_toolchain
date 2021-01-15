@@ -77,4 +77,4 @@ For usage examples of the Python wrapper see
 - [Convexified levelset](examples/convexified.py)
 
 ## Contribution
-If you have found things to improve of you have questions, please create a pull request to let us know.
+If you have found things to improve or you have questions, please create a pull request to let us know.
