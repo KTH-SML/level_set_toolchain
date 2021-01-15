@@ -90,19 +90,12 @@ class LevelSetWrapper(pylevel.loader.Loader):
         return self.sets[int(numpy.asscalar(t_idx))]['states']
 
     def get_reachable_set(self, state : list):
-        """ Return reachable states and its set index
-
-            Todo:
-                - Currently does not support numpy due to round in
-                get_index_of_rounded_state
-        """
+        """ Return reachable states and its set index. """
 
         closest_grid_index = self.grid_helper.get_index_of_rounded_state(state)
-        closest_state = self.grid_helper.get_state_of_index(closest_grid_index)
 
         for time_index, set_dictionary in self.sets.items():
             grid_indices = set_dictionary['grid_indices']
-            parser = set_dictionary['parser']
 
             if closest_grid_index in grid_indices:
                 return set_dictionary['states'], self.time[time_index]
