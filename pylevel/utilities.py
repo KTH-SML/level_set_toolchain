@@ -17,10 +17,10 @@ __email__ = "fjiang@kth.se "
 __status__ = "Development"
 
 
-def visualise_2d(wrapper, states, time, show=True, show_image=True):
+def visualise_2d(wrapper, states, time, show=True, show_image=False):
     grid_helper = wrapper.grid_helper
 
-    convex_hull = ConvexHull(states[:, :2])
+    convex_hull = ConvexHull(states)
 
     if show_image:
         img_width = grid_helper.N[0]
