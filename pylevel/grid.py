@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Grid module containing classes that work with saved MATLAB outputs of
 the Level Set Toolbox and helperOC. Much of the work is ported from
@@ -5,23 +6,33 @@ helperOC into Python, with some additional convenience features added
 in.
 """
 
+import attr
+import typing
+import numpy
+# Legacy
 import numpy as np
 from scipy.interpolate import interpn
 
 __license__ = "MIT"
+__author__ = "Frank Jiang, Philipp Rothenhäusler"
 __maintainer__ = "Frank Jiang"
 __email__ = "frankji@kth.se "
 __status__ = "Development"
 
 
-class Grid():
+@attr.s
+class Grid:
     '''Python object version of HJB toolbox grids'''
 
-    def __init__(self, matlab_g):
+    grid = attr.ib(type=numpy.array)
+    debug_is_enabled = attr.ib(default=False, type=bool)
+    show_config = attr.ib(default=False, type=bool)
+
+    def __attrs_post_init__(self):
         '''Fills object based on input matlab grid numpy array imported by
         scipy.io.loadmat
         '''
-        g = matlab_g[0][0]
+        g = self.grid[0][0]
         # dimension of state space
         self.dim = g[0][0][0]
         # min grid corner
@@ -30,14 +41,25 @@ class Grid():
         self.max = g[2].reshape((self.dim,)).tolist()
         # number of grid cells along each axis
         self.N = g[3].reshape((self.dim,)).tolist()
+        # Boundary condition to specify behaviour
         self.bdry = g[4].reshape((self.dim,)).tolist()
         # step size along each axis
         self.dx = g[5].reshape((self.dim,)).tolist()
+        # Convenience variable ds dimensional
+        # grid index to state
         self.vs = g[6].reshape((self.dim,)).tolist()
-        self.xs = g[7].reshape((self.dim,)).tolist()
-        self.bdryData = g[8].reshape((self.dim,)).tolist()
-        # same info as N
-        self.shape = tuple(g[10][0].tolist())
+        ## Unused - kept as reference: to be documented
+        # self.xs = g[7].reshape((self.dim,)).tolist()
+        ## Unused - kept as reference: to be documented
+        # self.bdryData = g[8].reshape((self.dim,)).tolist()
+        ## Unused - kept as reference: same info as N
+        # self.shape = tuple(g[10][0].tolist())
+
+        if self.show_config:
+            print('Grid initialisation with:')
+            print('Dimension:', self.dim)
+            print('Grid (min | max): ({} | {})'.format(self.min, self.max))
+            print('Grid step size: ', self.dx)
 
     def _assert_valid_state(self, x):
         assert len(x) == self.dim, "Input is wrong dimension"
@@ -61,6 +83,25 @@ class Grid():
     def _is_periodic_dim(self, dim):
         return "addGhostPeriodic" in self.bdry[dim][0][0][3][0][0][0][0]
 
+    def get_index_of_rounded_state(self, x):
+        self._assert_valid_state(x)
+        index = list()
+        for i in range(len(x)):
+            dx = self.dx[i]
+            index.append(int(round((x[i] - self.min[i])/dx)))
+        return tuple(index)
+
+    def get_state_of_index(self, index):
+        self._assert_valid_idx(index)
+        state = []
+        # dimensions
+        for di in range(len(index)):
+            # Get dimension-based grid step size
+            dx = self.dx[di]
+            state.append(index[di] * dx + self.min[di])
+        return state
+
+    # LEGACY
     def get_idx(self, x):
         self._assert_valid_state(x)
         idx = []
@@ -69,22 +110,30 @@ class Grid():
             idx.append(int(round((x[i] - self.min[i])/dx)))
         return tuple(idx)
 
+    # LEGACY
     def get_state(self, idx):
         self._assert_valid_idx(idx)
         state = []
-        for i in range(len(idx)):
-            dx = self.dx[i]
-            state.append(idx[i] * dx + self.min[i])
+        # dimensions
+        for di in range(len(idx)):
+            # Get dimension-based grid step size
+            dx = self.dx[di]
+            state.append(idx[di] * dx + self.min[di])
         return state
 
 
+@attr.s
 class GridData(Grid):
-    '''Combined object with grid and corresponding data'''
+    ''' Encapsulates functions for both grid and data functions on
+        imported MATLAB data.
 
-    def __init__(self, matlab_g, matlab_data):
-        Grid.__init__(self, matlab_g)
-        self.data = matlab_data
+    '''
+    ## Value function entries for meshed state space with
+    ## indices according to grid_indices
+    data = attr.ib(default=None, type=typing.Optional[numpy.array])
 
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
         self._augmentPeriodicData()
 
     def _augmentPeriodicData(self):
@@ -116,6 +165,7 @@ class GridData(Grid):
 
     def get_raw_value(self, x):
         idx = self.get_idx(x)
+
         return self.data[idx]
 
     def get_interp_value(self, x, method='linear'):
