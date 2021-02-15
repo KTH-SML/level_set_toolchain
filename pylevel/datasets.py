@@ -19,3 +19,8 @@ cwd = os.path.dirname(os.path.abspath(__file__))
 path = dict()
 path[LevelSet.SVEA] = cwd + "/../resources/svea/TTR_and_grad.mat"
 path[LevelSet.Drone] = cwd + "/../resources/quad4D/low_res_BRS.mat"
+
+string2levelset = dict()
+string2levelset["svea"] = LevelSet.SVEA
+string2levelset["drone"] = LevelSet.Drone
+
