@@ -2,7 +2,7 @@ function [g, data, tau2] = quad4D_RS(params)
 
 % TODO: clean up this list
 % Current possible params:
-% T, isBackwards, g, is_avoid, target, should_cover,
+% T, isBackwards, g, is_avoid, is_boundary_avoid, target, should_cover,
 % should_intersect, stop_converge, obstacle, uMin, uMax, xinit,
 % figNum, is_reach_colors, is_avoid_colors, makeVideo, videoFilename,
 % isTube
@@ -15,11 +15,14 @@ tau = t0:dt:tMax;
 
 % Grid
 g = params.g;
+grid_min = g.min;
+grid_max = g.max;
 
 % Target set
 R = 0.1;
 if isfield(params, 'isBackwards') && params.isBackwards % BRS
-    if (isfield(params, 'is_avoid') && params.is_avoid)
+    if (isfield(params, 'is_avoid') && params.is_avoid) || ...
+       (isfield(params, 'is_boundary_avoid') && params.is_boundary_avoid)
         uMode = 'max';
         dMode = 'min';
     else
@@ -32,6 +35,24 @@ if isfield(params, 'isBackwards') && params.isBackwards % BRS
     else
         data0 = shapeCylinder(g, [], [0; 0; 0; 0], R); % creates sphere
     end
+    
+    if isfield(params, 'is_boundary_avoid') && params.is_boundary_avoid
+        % TODO: clean this up
+        boundary0 = shapeRectangleByCorners(g, ...
+                [-Inf, -Inf,-Inf, -Inf], [grid_min(1)+0.1, Inf, Inf, Inf]);
+        boundary1 = shapeRectangleByCorners(g, ...
+            [grid_max(1)-0.1, -Inf, -Inf, -Inf], [Inf, Inf, Inf, Inf]);
+        boundary2 = shapeRectangleByCorners(g, ...
+            [-Inf, -Inf, -Inf, -Inf], [Inf, Inf, grid_min(3)+0.1, Inf]);
+        boundary3 = shapeRectangleByCorners(g, ...
+            [-Inf, -Inf, grid_max(3)-0.1, -Inf], [Inf, Inf, Inf, Inf]);
+        data0 = min(min(min(boundary0, boundary1), boundary2), boundary3);
+        
+        if isfield(params, 'target')
+            data0 = min(data0, params.target);
+        end
+    end
+
     
     if isfield(params, 'should_cover')
         HJIextraArgs.stopSetInclude = params.should_cover;
@@ -88,6 +109,10 @@ if isfield(params, 'figNum')
     HJIextraArgs.visualize.valueSet = true;
     HJIextraArgs.visualize.figNum = params.figNum; %set figure number
     HJIextraArgs.visualize.deleteLastPlot = true; %delete previous plot as you update
+    
+    HJIextraArgs.visualize.xTitle = "x";
+    HJIextraArgs.visualize.yTitle = "vx";
+    HJIextraArgs.visualize.zTitle = "y";
 
     if isfield(params, 'is_reach_colors')
         HJIextraArgs.visualize.plotColorVS0 = 'g';
