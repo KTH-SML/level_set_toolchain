@@ -17,38 +17,61 @@ global_max = [1.5, 0.25, 1.5, 0.25];
 global_N = N_from_resolution(global_min, global_max, resolution);
 global_g = createGrid(global_min, global_max, global_N);
 
-% Define inspection zone grid
-inspect_zone_min = [0.0, -0.25, -1.5, -0.25];
-inspect_zone_max = [1.5, 0.25, -0.0, 0.25];
-inspect_zone_N = N_from_resolution(inspect_zone_min, inspect_zone_max, resolution);
-inspect_zone_g = createGrid(inspect_zone_min, inspect_zone_max, inspect_zone_N);
+% Inspect Zone A
+inspect_zone_a_min = [0.0, -0.25, 0.0, -0.25];
+inspect_zone_a_max = [1.5, 0.25, 1.5, 0.25];
+inspect_zone_a_N = N_from_resolution(inspect_zone_a_min, inspect_zone_a_max, resolution);
+inspect_zone_a_g = createGrid(inspect_zone_a_min, inspect_zone_a_max, inspect_zone_a_N);
+
+% Inspect Zone B
+inspect_zone_b_min = [0.0, -0.25, -1.5, -0.25];
+inspect_zone_b_max = [1.5, 0.25, 0.0, 0.25];
+inspect_zone_b_N = N_from_resolution(inspect_zone_b_min, inspect_zone_b_max, resolution);
+inspect_zone_b_g = createGrid(inspect_zone_b_min, inspect_zone_b_max, inspect_zone_b_N);
 
 % Create shelf obstacles
 shelf_w = 0.32;
 shelf_l = 1.44;
-x_align_shelf_center = [0.5 0]; % xy position of center of shelf
-y_align_shelf_center = [0 -1.5];
-shelf1_min = x_align_shelf_center - [shelf_l/2 shelf_w/2];
-shelf1_max = x_align_shelf_center + [shelf_l/2 shelf_w/2];
-shelf2_min = y_align_shelf_center - [shelf_w/2 shelf_l/2];
-shelf2_max = y_align_shelf_center + [shelf_w/2 shelf_l/2];
+shelf_center_center = [0.5 0]; % xy position of center of shelf
+shelf_center_min = shelf_center_center - [shelf_l/2 shelf_w/2];
+shelf_center_max = shelf_center_center + [shelf_l/2 shelf_w/2];
+shelf_right_center = [0 -1.5];
+shelf_right_min = shelf_right_center - [shelf_w/2 shelf_l/2];
+shelf_right_max = shelf_right_center + [shelf_w/2 shelf_l/2];
+shelf_left_center = [0 1.5]; % xy position of center of shelf
+shelf_left_min = shelf_left_center - [shelf_l/2 shelf_w/2];
+shelf_left_max = shelf_left_center + [shelf_l/2 shelf_w/2];
 
-min1 = [shelf1_min(1), -Inf, shelf1_min(2), -Inf];
-max1 = [Inf, Inf, shelf1_max(2), Inf];
-min2 = [shelf2_min(1), -Inf, -Inf, -Inf];
-max2 = [shelf2_max(1), Inf, shelf2_max(2), Inf];
-shelf1 = shapeRectangleByCorners(global_g, min1, max1);
-shelf2 = shapeRectangleByCorners(global_g, min2, max2);
-shelves_global = min(shelf1, shelf2);
+% Embed shelves into global grid
+min_center = [shelf_center_min(1), -Inf, shelf_center_min(2), -Inf];
+max_center = [Inf, Inf, shelf_center_max(2), Inf];
+shelf_center = shapeRectangleByCorners(global_g, min_center, max_center);
+min_right = [shelf_right_min(1), -Inf, -Inf, -Inf];
+max_right = [shelf_right_max(1), Inf, shelf_right_max(2), Inf];
+shelf_right = shapeRectangleByCorners(global_g, min_right, max_right);
+min_left = [-Inf, -Inf, shelf_left_min(2), -Inf];
+max_left = [shelf_left_max(1), Inf, shelf_left_max(2), Inf];
+shelf_left = shapeRectangleByCorners(global_g, min_left, max_left);
+shelves_global = min(min(shelf_center, shelf_right), shelf_left);
 
-min1 = [shelf1_min(1), -Inf, shelf1_min(2), -Inf];
-max1 = [Inf, Inf, Inf, Inf];
-min2 = [-Inf, -Inf, -Inf, -Inf];
-max2 = [shelf2_max(1), Inf, shelf2_max(2), Inf];
-shelf1 = shapeRectangleByCorners(inspect_zone_g, min1, max1);
-shelf2 = shapeRectangleByCorners(inspect_zone_g, min2, max2);
-shelves_inspect_zone = min(shelf1, shelf2);
-                 
+% Embed shelves into Inspect Zone A
+min_center = [-Inf, -Inf, -Inf, -Inf];
+max_center = [shelf_center_max(1), Inf, shelf_center_max(2), Inf];
+shelf_center = shapeRectangleByCorners(inspect_zone_a_g, min_center, max_center);
+min_left = [-Inf, -Inf, shelf_left_min(2), -Inf];
+max_left = [shelf_left_max(1), Inf, Inf, Inf];
+shelf_left = shapeRectangleByCorners(inspect_zone_a_g, min_left, max_left);
+shelves_inspect_a = min(shelf_center, shelf_left);
+
+% Embed shelves into Inspect Zone B
+min_center = [shelf_center_min(1), -Inf, shelf_center_min(2), -Inf];
+max_center = [Inf, Inf, Inf, Inf];
+shelf_center = shapeRectangleByCorners(inspect_zone_b_g, min_center, max_center);
+min_right = [-Inf, -Inf, -Inf, -Inf];
+max_right = [shelf_right_max(1), Inf, shelf_right_max(2), Inf];
+shelf_right = shapeRectangleByCorners(inspect_zone_b_g, min_right, max_right);
+shelves_inspect_b = min(shelf_center, shelf_right);
+
 %% Forward Reachable Tube
 params = default_params;
 params.isBackwards = false; % FRT
@@ -62,7 +85,7 @@ params.isTube = true;
 params.videoFilename = [save_path 'reach_BRS'];
 [~, FRS_data, FRS_time] = quad4D_RS(params);
 
-%% Backward Reachable Tubes
+%% Backward Reachable Tubes Inspect A
 % Compute backward reach tubes for TLT corresponding to LTL statement:
 % (Eventually-Always in Inspection Zone Until Eventually Inspection Goal)
 % and (Always not Shelf)
@@ -71,28 +94,28 @@ params.videoFilename = [save_path 'reach_BRS'];
 params = default_params;
 params.figNum = 2;
 params.isBackwards = true; % BRS
-params.g = inspect_zone_g;
+params.g = inspect_zone_a_g;
 params.T = 1;
 params.is_boundary_avoid = true;
 params.is_avoid_colors = true;
 params.isTube = true;
-params.videoFilename = [save_path 'always_inspection_zone_BRS'];
-[~, alw_inspect_zone_data, alw_inspect_zone_time] = quad4D_RS(params);
+params.videoFilename = [save_path 'always_inspection_zone_a_BRS'];
+[~, alw_inspect_zone_a_data, alw_inspect_zone_a_time] = quad4D_RS(params);
 % define complement as the RCIS
-rcis_inspect_zone = -alw_inspect_zone_data(:, :, :, :, end);
+rcis_inspect_zone_a = -alw_inspect_zone_a_data(:, :, :, :, end);
 
 % Compute reach inspection goal in inspection zone
 params = default_params;
 params.figNum = 3;
 params.isBackwards = true; % BRS
-params.g = inspect_zone_g;
+params.g = inspect_zone_a_g;
 params.T = 8; % seconds
 params.target = shapeCylinder(params.g, [2, 4], [1.1; 0; -0.5; 0], 0.1);
-params.obstacle = min(-rcis_inspect_zone, shelves_inspect_zone);
+params.obstacle = min(-rcis_inspect_zone_a, shelves_inspect_zone_a);
 params.is_reach_colors = true;
 params.isTube = false;
-params.videoFilename = [save_path 'eventually_inspection_goal_BRS'];
-[~, ev_inspect_goal_data, ev_inspect_goal_time] = quad4D_RS(params);
+params.videoFilename = [save_path 'eventually_inspection_goal_a_BRS'];
+[~, ev_inspect_goal_a_data, ev_inspect_goal_a_time] = quad4D_RS(params);
 
 % Compute reach RCIS of inspection zone
 params = default_params;
@@ -100,26 +123,83 @@ params.figNum = 4;
 params.isBackwards = true; % BRS
 params.g = global_g;
 params.T = 12;
-rcis_inspect_zone_global = migrateGrid(inspect_zone_g, rcis_inspect_zone, global_g');
-params.target = rcis_inspect_zone_global;
+rcis_inspect_zone_a_global = migrateGrid(inspect_zone_a_g, rcis_inspect_zone_a, global_g');
+params.target = rcis_inspect_zone_a_global;
 params.obstacle = shelves_global;
 params.is_reach_colors = true;
 params.isTube = false;
-params.videoFilename = [save_path 'eventually_rcis_inspection_BRS'];
-[~, ev_rcis_inspect_zone_data, ev_rcis_inspect_zone_time] = quad4D_RS(params);
+params.videoFilename = [save_path 'eventually_rcis_inspection_a_BRS'];
+[~, ev_rcis_inspect_zone_a_data, ev_rcis_inspect_zone_a_time] = quad4D_RS(params);
 
-% Compute avoid shelf in each grid
+%% Backward Reachable Tubes Inspect B
+% Compute backward reach tubes for TLT corresponding to LTL statement:
+% (Eventually-Always in Inspection Zone Until Eventually Inspection Goal)
+% and (Always not Shelf)
+
+% Compute avoid leave inspection zone (RCIS of inspection zone)
 params = default_params;
 params.figNum = 5;
 params.isBackwards = true; % BRS
-params.g = inspect_zone_g;
+params.g = inspect_zone_b_g;
 params.T = 1;
-params.obstacle = shelves_inspect_zone;
+params.is_boundary_avoid = true;
 params.is_avoid_colors = true;
 params.isTube = true;
-params.videoFilename = [save_path 'always_no_shelf_inspect_zone_BRS'];
-[~, alw_no_shelf_inspect_zone_data, alw_no_shelf_inspect_zone_time] = quad4D_RS(params);
+params.videoFilename = [save_path 'always_inspection_zone_b_BRS'];
+[~, alw_inspect_zone_b_data, alw_inspect_zone_b_time] = quad4D_RS(params);
+% define complement as the RCIS
+rcis_inspect_zone_b = -alw_inspect_zone_b_data(:, :, :, :, end);
+
+% Compute reach inspection goal in inspection zone
+params = default_params;
 params.figNum = 6;
+params.isBackwards = true; % BRS
+params.g = inspect_zone_b_g;
+params.T = 8; % seconds
+params.target = shapeCylinder(params.g, [2, 4], [1.1; 0; -0.5; 0], 0.1);
+params.obstacle = min(-rcis_inspect_zone_b, shelves_inspect_zone_b);
+params.is_reach_colors = true;
+params.isTube = false;
+params.videoFilename = [save_path 'eventually_inspection_goal_b_BRS'];
+[~, ev_inspect_goal_b_data, ev_inspect_goal_b_time] = quad4D_RS(params);
+
+% Compute reach RCIS of inspection zone
+params = default_params;
+params.figNum = 7;
+params.isBackwards = true; % BRS
+params.g = global_g;
+params.T = 12;
+rcis_inspect_zone_b_global = migrateGrid(inspect_zone_b_g, rcis_inspect_zone_b, global_g');
+params.target = rcis_inspect_zone_b_global;
+params.obstacle = shelves_global;
+params.is_reach_colors = true;
+params.isTube = false;
+params.videoFilename = [save_path 'eventually_rcis_inspection_b_BRS'];
+[~, ev_rcis_inspect_zone_b_data, ev_rcis_inspect_zone_b_time] = quad4D_RS(params);
+
+%% Avoid Backward Reachable Tubes of Shelves
+% Compute avoid shelf in each grid
+params = default_params;
+params.figNum = 8;
+params.isBackwards = true; % BRS
+params.g = inspect_zone_a_g;
+params.T = 1;
+params.obstacle = shelves_inspect_zone_a;
+params.is_avoid_colors = true;
+params.isTube = true;
+params.videoFilename = [save_path 'always_no_shelf_inspect_zone_a_BRS'];
+[~, alw_no_shelf_inspect_zone_a_data, alw_no_shelf_inspect_zone_a_time] = quad4D_RS(params);
+params = default_params;
+params.figNum = 9;
+params.isBackwards = true; % BRS
+params.g = inspect_zone_b_g;
+params.T = 1;
+params.obstacle = shelves_inspect_zone_b;
+params.is_avoid_colors = true;
+params.isTube = true;
+params.videoFilename = [save_path 'always_no_shelf_inspect_zone_b_BRS'];
+[~, alw_no_shelf_inspect_zone_b_data, alw_no_shelf_inspect_zone_b_time] = quad4D_RS(params);
+params.figNum = 10;
 params.isBackwards = true; % BRS
 params.g = global_g;
 params.T = 1;
@@ -129,7 +209,6 @@ params.isTube = true;
 params.videoFilename = [save_path 'always_no_shelf_global_BRS'];
 [~, alw_no_shelf_global_data, alw_no_shelf_global_time] = quad4D_RS(params);
 
-
 %% Save RS and other useful data
 % generic FRS
 g = global_g;
@@ -138,23 +217,37 @@ save(data_save_path, 'g', 'FRS_data', 'FRS_time');
 
 % BRS for reaching inspect zone RCIS
 g = global_g;
-data_save_path = [save_path 'ev_rcis_inspect_zone'];
-save(data_save_path, 'g', 'ev_rcis_inspect_zone_data', 'ev_rcis_inspect_zone_time');
-
+data_save_path = [save_path 'ev_rcis_inspect_zone_a'];
+save(data_save_path, 'g', 'ev_rcis_inspect_zone_a_data', 'ev_rcis_inspect_zone_a_time');
 % BRS for always staying inside RCIS
-g = inspect_zone_g;
-data_save_path = [save_path 'alw_inspect_zone'];
-save(data_save_path, 'g', 'alw_inspect_zone_data', 'alw_inspect_zone_time');
-
+g = inspect_zone_a_g;
+data_save_path = [save_path 'alw_inspect_zone_a'];
+save(data_save_path, 'g', 'alw_inspect_zone_a_data', 'alw_inspect_zone_a_time');
 % BRS for reaching inspect goal
-g = inspect_zone_g;
-data_save_path = [save_path 'ev_inspect_goal'];
-save(data_save_path, 'g', 'ev_inspect_goal_data', 'ev_inspect_goal_time');
+g = inspect_zone_a_g;
+data_save_path = [save_path 'ev_inspect_goal_a'];
+save(data_save_path, 'g', 'ev_inspect_goal_a_data', 'ev_inspect_goal_a_time');
+
+% BRS for reaching inspect zone RCIS
+g = global_g;
+data_save_path = [save_path 'ev_rcis_inspect_zone_b'];
+save(data_save_path, 'g', 'ev_rcis_inspect_zone_b_data', 'ev_rcis_inspect_zone_b_time');
+% BRS for always staying inside RCIS
+g = inspect_zone_b_g;
+data_save_path = [save_path 'alw_inspect_zone_b'];
+save(data_save_path, 'g', 'alw_inspect_zone_b_data', 'alw_inspect_zone_b_time');
+% BRS for reaching inspect goal
+g = inspect_zone_b_g;
+data_save_path = [save_path 'ev_inspect_goal_b'];
+save(data_save_path, 'g', 'ev_inspect_goal_b_data', 'ev_inspect_goal_b_time');
 
 % BRS for always avoiding shelf in inspect zone
-g = inspect_zone_g;
-data_save_path = [save_path 'alw_no_shelf_inspect_zone'];
-save(data_save_path, 'g', 'alw_no_shelf_inspect_zone_data', 'alw_no_shelf_inspect_zone_time');
+g = inspect_zone_a_g;
+data_save_path = [save_path 'alw_no_shelf_inspect_zone_a'];
+save(data_save_path, 'g', 'alw_no_shelf_inspect_zone_a_data', 'alw_no_shelf_inspect_zone_a_time');
+g = inspect_zone_b_g;
+data_save_path = [save_path 'alw_no_shelf_inspect_zone_b'];
+save(data_save_path, 'g', 'alw_no_shelf_inspect_zone_b_data', 'alw_no_shelf_inspect_zone_b_time');
 
 % BRS for always avoiding shelf in global grid
 g = global_g;
