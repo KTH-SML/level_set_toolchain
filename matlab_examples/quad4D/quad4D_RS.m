@@ -110,9 +110,11 @@ if isfield(params, 'figNum')
     HJIextraArgs.visualize.figNum = params.figNum; %set figure number
     HJIextraArgs.visualize.deleteLastPlot = true; %delete previous plot as you update
     
-    HJIextraArgs.visualize.xTitle = "x";
-    HJIextraArgs.visualize.yTitle = "vx";
-    HJIextraArgs.visualize.zTitle = "y";
+    HJIextraArgs.visualize.plotData.plotDims = [1; 0; 1; 0];
+    HJIextraArgs.visualize.plotData.projpt = [0.1; 0.1];
+
+    HJIextraArgs.visualize.xTitle = "x (m)";
+    HJIextraArgs.visualize.yTitle = "y (m)";
 
     if isfield(params, 'is_reach_colors')
         HJIextraArgs.visualize.plotColorVS0 = 'g';

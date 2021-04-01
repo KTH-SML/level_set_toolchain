@@ -39,8 +39,8 @@ shelf_right_center = [0 -1.5];
 shelf_right_min = shelf_right_center - [shelf_w/2 shelf_l/2];
 shelf_right_max = shelf_right_center + [shelf_w/2 shelf_l/2];
 shelf_left_center = [0 1.5]; % xy position of center of shelf
-shelf_left_min = shelf_left_center - [shelf_l/2 shelf_w/2];
-shelf_left_max = shelf_left_center + [shelf_l/2 shelf_w/2];
+shelf_left_min = shelf_left_center - [shelf_w/2 shelf_l/2];
+shelf_left_max = shelf_left_center + [shelf_w/2 shelf_l/2];
 
 % Embed shelves into global grid
 min_center = [shelf_center_min(1), -Inf, shelf_center_min(2), -Inf];
@@ -49,8 +49,8 @@ shelf_center = shapeRectangleByCorners(global_g, min_center, max_center);
 min_right = [shelf_right_min(1), -Inf, -Inf, -Inf];
 max_right = [shelf_right_max(1), Inf, shelf_right_max(2), Inf];
 shelf_right = shapeRectangleByCorners(global_g, min_right, max_right);
-min_left = [-Inf, -Inf, shelf_left_min(2), -Inf];
-max_left = [shelf_left_max(1), Inf, shelf_left_max(2), Inf];
+min_left = [shelf_left_min(1), -Inf, shelf_left_min(2), -Inf];
+max_left = [shelf_left_max(1), Inf, Inf, Inf];
 shelf_left = shapeRectangleByCorners(global_g, min_left, max_left);
 shelves_global = min(min(shelf_center, shelf_right), shelf_left);
 
@@ -78,7 +78,7 @@ params.isBackwards = false; % FRT
 params.g = global_g;
 
 params.figNum = 1;
-params.T = 4.0; % seconds
+params.T = 5.0; % seconds
 params.target = shapeCylinder(params.g, [2, 4], [0; 0; 0; 0], 0.1);
 params.is_reach_colors = true;
 params.isTube = true;
@@ -106,12 +106,12 @@ rcis_inspect_zone_a = -alw_inspect_zone_a_data(:, :, :, :, end);
 
 % Compute reach inspection goal in inspection zone
 params = default_params;
-params.figNum = 3;
+params.figNum = 2;
 params.isBackwards = true; % BRS
 params.g = inspect_zone_a_g;
 params.T = 8; % seconds
-params.target = shapeCylinder(params.g, [2, 4], [1.1; 0; -0.5; 0], 0.1);
-params.obstacle = min(-rcis_inspect_zone_a, shelves_inspect_zone_a);
+params.target = shapeCylinder(params.g, [2, 4], [1.1; 0; 0.5; 0], 0.1);
+params.obstacle = min(-rcis_inspect_zone_a, shelves_inspect_a);
 params.is_reach_colors = true;
 params.isTube = false;
 params.videoFilename = [save_path 'eventually_inspection_goal_a_BRS'];
@@ -119,7 +119,7 @@ params.videoFilename = [save_path 'eventually_inspection_goal_a_BRS'];
 
 % Compute reach RCIS of inspection zone
 params = default_params;
-params.figNum = 4;
+params.figNum = 2;
 params.isBackwards = true; % BRS
 params.g = global_g;
 params.T = 12;
@@ -138,7 +138,7 @@ params.videoFilename = [save_path 'eventually_rcis_inspection_a_BRS'];
 
 % Compute avoid leave inspection zone (RCIS of inspection zone)
 params = default_params;
-params.figNum = 5;
+params.figNum = 3;
 params.isBackwards = true; % BRS
 params.g = inspect_zone_b_g;
 params.T = 1;
@@ -152,12 +152,12 @@ rcis_inspect_zone_b = -alw_inspect_zone_b_data(:, :, :, :, end);
 
 % Compute reach inspection goal in inspection zone
 params = default_params;
-params.figNum = 6;
+params.figNum = 3;
 params.isBackwards = true; % BRS
 params.g = inspect_zone_b_g;
 params.T = 8; % seconds
 params.target = shapeCylinder(params.g, [2, 4], [1.1; 0; -0.5; 0], 0.1);
-params.obstacle = min(-rcis_inspect_zone_b, shelves_inspect_zone_b);
+params.obstacle = min(-rcis_inspect_zone_b, shelves_inspect_b);
 params.is_reach_colors = true;
 params.isTube = false;
 params.videoFilename = [save_path 'eventually_inspection_goal_b_BRS'];
@@ -165,7 +165,7 @@ params.videoFilename = [save_path 'eventually_inspection_goal_b_BRS'];
 
 % Compute reach RCIS of inspection zone
 params = default_params;
-params.figNum = 7;
+params.figNum = 3;
 params.isBackwards = true; % BRS
 params.g = global_g;
 params.T = 12;
@@ -180,30 +180,33 @@ params.videoFilename = [save_path 'eventually_rcis_inspection_b_BRS'];
 %% Avoid Backward Reachable Tubes of Shelves
 % Compute avoid shelf in each grid
 params = default_params;
-params.figNum = 8;
+params.figNum = 4;
 params.isBackwards = true; % BRS
+params.is_avoid = true;
 params.g = inspect_zone_a_g;
 params.T = 1;
-params.obstacle = shelves_inspect_zone_a;
+params.target = shelves_inspect_a;
 params.is_avoid_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path 'always_no_shelf_inspect_zone_a_BRS'];
 [~, alw_no_shelf_inspect_zone_a_data, alw_no_shelf_inspect_zone_a_time] = quad4D_RS(params);
 params = default_params;
-params.figNum = 9;
+params.figNum = 4;
 params.isBackwards = true; % BRS
+params.is_avoid = true;
 params.g = inspect_zone_b_g;
 params.T = 1;
-params.obstacle = shelves_inspect_zone_b;
+params.target = shelves_inspect_b;
 params.is_avoid_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path 'always_no_shelf_inspect_zone_b_BRS'];
 [~, alw_no_shelf_inspect_zone_b_data, alw_no_shelf_inspect_zone_b_time] = quad4D_RS(params);
-params.figNum = 10;
+params.figNum = 4;
 params.isBackwards = true; % BRS
+params.is_avoid = true;
 params.g = global_g;
 params.T = 1;
-params.obstacle = shelves_global;
+params.target = shelves_global;
 params.is_avoid_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path 'always_no_shelf_global_BRS'];
