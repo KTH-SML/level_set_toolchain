@@ -10,7 +10,12 @@ __email__ = "phirot@kth.se "
 __status__ = "Development"
 
 
+## Base class definition for enumeration definition of level sets
 class LevelSet(enum.IntEnum):
+    pass
+
+## Example implementation of level sets
+class LevelSetExample(LevelSet):
     SVEA = 1
     Drone = 2
 
