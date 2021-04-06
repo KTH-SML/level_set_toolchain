@@ -1,4 +1,4 @@
-function [g, data, tau2] = quad4D_RS(params)
+function [g, data, tau2] = quad_RS(params)
 
 % TODO: clean up this list
 % Current possible params:
@@ -39,13 +39,13 @@ if isfield(params, 'isBackwards') && params.isBackwards % BRS
     if isfield(params, 'is_boundary_avoid') && params.is_boundary_avoid
         % TODO: clean this up
         boundary0 = shapeRectangleByCorners(g, ...
-                [-Inf, -Inf,-Inf, -Inf], [grid_min(1)+0.1, Inf, Inf, Inf]);
+                [-Inf, -Inf,-Inf, -Inf], [grid_min(1)+0.15, Inf, Inf, Inf]);
         boundary1 = shapeRectangleByCorners(g, ...
-            [grid_max(1)-0.1, -Inf, -Inf, -Inf], [Inf, Inf, Inf, Inf]);
+            [grid_max(1)-0.15, -Inf, -Inf, -Inf], [Inf, Inf, Inf, Inf]);
         boundary2 = shapeRectangleByCorners(g, ...
-            [-Inf, -Inf, -Inf, -Inf], [Inf, Inf, grid_min(3)+0.1, Inf]);
+            [-Inf, -Inf, -Inf, -Inf], [Inf, Inf, grid_min(3)+0.15, Inf]);
         boundary3 = shapeRectangleByCorners(g, ...
-            [-Inf, -Inf, grid_max(3)-0.1, -Inf], [Inf, Inf, Inf, Inf]);
+            [-Inf, -Inf, grid_max(3)-0.15, -Inf], [Inf, Inf, Inf, Inf]);
         data0 = min(min(min(boundary0, boundary1), boundary2), boundary3);
         
         if isfield(params, 'target')
@@ -89,10 +89,11 @@ end
 % Define dynamic system
 uMin = params.uMin; % TODO: make these optional
 uMax = params.uMax;
+dMax = params.dMax;
 if isfield(params, 'xinit')
-    quad = Quad4D(params.xinit, uMin, uMax);
+    quad = QuadDisturb(params.xinit, uMin, uMax, dMax);
 else
-    quad = Quad4D([0, 0, 0, 0], uMin, uMax);
+    quad = QuadDisturb([0, 0, 0, 0], uMin, uMax, dMax);
 end
 
 % Put grid and dynamic systems into schemeData
@@ -111,7 +112,7 @@ if isfield(params, 'figNum')
     HJIextraArgs.visualize.deleteLastPlot = true; %delete previous plot as you update
     
     HJIextraArgs.visualize.plotData.plotDims = [1; 0; 1; 0];
-    HJIextraArgs.visualize.plotData.projpt = [0.1; 0.1];
+    HJIextraArgs.visualize.plotData.projpt = [0.0; 0.0];
 
     HJIextraArgs.visualize.xTitle = "x (m)";
     HJIextraArgs.visualize.yTitle = "y (m)";

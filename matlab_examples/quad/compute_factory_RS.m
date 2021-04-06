@@ -2,36 +2,42 @@
 clear
 
 %% General Parameters
-save_path = '/home/fjiang/Projects/MATLAB/Experiments/SML_level_set/resources/quad4D/factory/';
-default_params.uMin = -2; % Acceleration limits
-default_params.uMax = 2;
-default_params.makeVideo = false;
+save_path = '/home/fjiang/Projects/MATLAB/Experiments/SML_level_set/resources/quad/factory/';
+default_params.uMin = -1; % Acceleration limits
+default_params.uMax = 1;
+% by default consider zero disturbance, but in avoid situations consider
+% worst-case
+default_params.dMax = [0.0, 0.0, 0.0, 0.0]; % disturbance to \dot[x, v_x, y, v_y]
+dWorstCase = 0.75; % worst-case disturbance
+
+default_params.makeVideo = true;
 
 % Desired resolution of grid [x, v_x, y, v_y]
-resolution = [0.1 0.1 0.1 0.1];
+global_resolution = [0.05 0.05 0.05 0.05];
+zone_resolution = [0.025 0.05 0.025 0.05];
 % Note, these resolutions should be smaller than the target region
 
 % Define factory global grid
 global_min = [-1.5, -0.25, -1.5, -0.25];
 global_max = [1.5, 0.25, 1.5, 0.25];
-global_N = N_from_resolution(global_min, global_max, resolution);
+global_N = N_from_resolution(global_min, global_max, global_resolution);
 global_g = createGrid(global_min, global_max, global_N);
 
 % Inspect Zone A
 inspect_zone_a_min = [0.0, -0.25, 0.0, -0.25];
 inspect_zone_a_max = [1.5, 0.25, 1.5, 0.25];
-inspect_zone_a_N = N_from_resolution(inspect_zone_a_min, inspect_zone_a_max, resolution);
+inspect_zone_a_N = N_from_resolution(inspect_zone_a_min, inspect_zone_a_max, zone_resolution);
 inspect_zone_a_g = createGrid(inspect_zone_a_min, inspect_zone_a_max, inspect_zone_a_N);
 
 % Inspect Zone B
 inspect_zone_b_min = [0.0, -0.25, -1.5, -0.25];
 inspect_zone_b_max = [1.5, 0.25, 0.0, 0.25];
-inspect_zone_b_N = N_from_resolution(inspect_zone_b_min, inspect_zone_b_max, resolution);
+inspect_zone_b_N = N_from_resolution(inspect_zone_b_min, inspect_zone_b_max, zone_resolution);
 inspect_zone_b_g = createGrid(inspect_zone_b_min, inspect_zone_b_max, inspect_zone_b_N);
 
-% Create shelf obstacles
-shelf_w = 0.32;
-shelf_l = 1.44;
+% Create shelf obstacles (including over approx. of minkowski sum)
+shelf_w = 0.32 + 0.15*2;
+shelf_l = 1.44 + 0.15*2;
 shelf_center_center = [0.5 0]; % xy position of center of shelf
 shelf_center_min = shelf_center_center - [shelf_l/2 shelf_w/2];
 shelf_center_max = shelf_center_center + [shelf_l/2 shelf_w/2];
@@ -83,7 +89,7 @@ params.target = shapeCylinder(params.g, [2, 4], [0; 0; 0; 0], 0.1);
 params.is_reach_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path 'reach_BRS'];
-[~, FRS_data, FRS_time] = quad4D_RS(params);
+[~, FRS_data, FRS_time] = quad_RS(params);
 
 %% Backward Reachable Tubes Inspect A
 % Compute backward reach tubes for TLT corresponding to LTL statement:
@@ -92,15 +98,17 @@ params.videoFilename = [save_path 'reach_BRS'];
 
 % Compute avoid leave inspection zone (RCIS of inspection zone)
 params = default_params;
+params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
 params.figNum = 2;
 params.isBackwards = true; % BRS
 params.g = inspect_zone_a_g;
-params.T = 1;
+params.T = 2;
+params.is_avoid = true;
 params.is_boundary_avoid = true;
 params.is_avoid_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path 'always_inspection_zone_a_BRS'];
-[~, alw_inspect_zone_a_data, alw_inspect_zone_a_time] = quad4D_RS(params);
+[~, alw_inspect_zone_a_data, alw_inspect_zone_a_time] = quad_RS(params);
 % define complement as the RCIS
 rcis_inspect_zone_a = -alw_inspect_zone_a_data(:, :, :, :, end);
 
@@ -115,7 +123,7 @@ params.obstacle = min(-rcis_inspect_zone_a, shelves_inspect_a);
 params.is_reach_colors = true;
 params.isTube = false;
 params.videoFilename = [save_path 'eventually_inspection_goal_a_BRS'];
-[~, ev_inspect_goal_a_data, ev_inspect_goal_a_time] = quad4D_RS(params);
+[~, ev_inspect_goal_a_data, ev_inspect_goal_a_time] = quad_RS(params);
 
 % Compute reach RCIS of inspection zone
 params = default_params;
@@ -129,7 +137,7 @@ params.obstacle = shelves_global;
 params.is_reach_colors = true;
 params.isTube = false;
 params.videoFilename = [save_path 'eventually_rcis_inspection_a_BRS'];
-[~, ev_rcis_inspect_zone_a_data, ev_rcis_inspect_zone_a_time] = quad4D_RS(params);
+[~, ev_rcis_inspect_zone_a_data, ev_rcis_inspect_zone_a_time] = quad_RS(params);
 
 %% Backward Reachable Tubes Inspect B
 % Compute backward reach tubes for TLT corresponding to LTL statement:
@@ -138,15 +146,17 @@ params.videoFilename = [save_path 'eventually_rcis_inspection_a_BRS'];
 
 % Compute avoid leave inspection zone (RCIS of inspection zone)
 params = default_params;
+params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
 params.figNum = 3;
 params.isBackwards = true; % BRS
 params.g = inspect_zone_b_g;
-params.T = 1;
+params.T = 2;
+params.is_avoid = true;
 params.is_boundary_avoid = true;
 params.is_avoid_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path 'always_inspection_zone_b_BRS'];
-[~, alw_inspect_zone_b_data, alw_inspect_zone_b_time] = quad4D_RS(params);
+[~, alw_inspect_zone_b_data, alw_inspect_zone_b_time] = quad_RS(params);
 % define complement as the RCIS
 rcis_inspect_zone_b = -alw_inspect_zone_b_data(:, :, :, :, end);
 
@@ -161,7 +171,7 @@ params.obstacle = min(-rcis_inspect_zone_b, shelves_inspect_b);
 params.is_reach_colors = true;
 params.isTube = false;
 params.videoFilename = [save_path 'eventually_inspection_goal_b_BRS'];
-[~, ev_inspect_goal_b_data, ev_inspect_goal_b_time] = quad4D_RS(params);
+[~, ev_inspect_goal_b_data, ev_inspect_goal_b_time] = quad_RS(params);
 
 % Compute reach RCIS of inspection zone
 params = default_params;
@@ -175,42 +185,46 @@ params.obstacle = shelves_global;
 params.is_reach_colors = true;
 params.isTube = false;
 params.videoFilename = [save_path 'eventually_rcis_inspection_b_BRS'];
-[~, ev_rcis_inspect_zone_b_data, ev_rcis_inspect_zone_b_time] = quad4D_RS(params);
+[~, ev_rcis_inspect_zone_b_data, ev_rcis_inspect_zone_b_time] = quad_RS(params);
 
 %% Avoid Backward Reachable Tubes of Shelves
 % Compute avoid shelf in each grid
 params = default_params;
+params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
 params.figNum = 4;
 params.isBackwards = true; % BRS
 params.is_avoid = true;
 params.g = inspect_zone_a_g;
-params.T = 1;
+params.T = 2;
 params.target = shelves_inspect_a;
 params.is_avoid_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path 'always_no_shelf_inspect_zone_a_BRS'];
-[~, alw_no_shelf_inspect_zone_a_data, alw_no_shelf_inspect_zone_a_time] = quad4D_RS(params);
+[~, alw_no_shelf_inspect_zone_a_data, alw_no_shelf_inspect_zone_a_time] = quad_RS(params);
 params = default_params;
+params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
 params.figNum = 4;
 params.isBackwards = true; % BRS
 params.is_avoid = true;
 params.g = inspect_zone_b_g;
-params.T = 1;
+params.T = 2;
 params.target = shelves_inspect_b;
 params.is_avoid_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path 'always_no_shelf_inspect_zone_b_BRS'];
-[~, alw_no_shelf_inspect_zone_b_data, alw_no_shelf_inspect_zone_b_time] = quad4D_RS(params);
+[~, alw_no_shelf_inspect_zone_b_data, alw_no_shelf_inspect_zone_b_time] = quad_RS(params);
+params = default_params;
+params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
 params.figNum = 4;
 params.isBackwards = true; % BRS
 params.is_avoid = true;
 params.g = global_g;
-params.T = 1;
+params.T = 2;
 params.target = shelves_global;
 params.is_avoid_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path 'always_no_shelf_global_BRS'];
-[~, alw_no_shelf_global_data, alw_no_shelf_global_time] = quad4D_RS(params);
+[~, alw_no_shelf_global_data, alw_no_shelf_global_time] = quad_RS(params);
 
 %% Save RS and other useful data
 % generic FRS
