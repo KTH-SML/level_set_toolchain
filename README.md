@@ -1,22 +1,17 @@
-# SML's Hamilton-Jacobi Reachability Analysis Starter Kit
+# SML's Hamilton-Jacobi Reachability Analysis Toolchain
+In this repository we introduce the toolchain for using _Hamilton-Jacobi Reachability_ through a combination of MATLAB and Python, allowing to solve for reachable sets of dynamical systems with strong guarantees.
 
-In this repo, you'll find a starting toolchain for solving and working with
-Hamilton-Jacobi reachability analysis.
-In particular, you can use this repo to start solving for reachable sets of dynamical systems with strong guarantees.
-
-To compute reachable sets, we use the Level Set Method for solving the
-Hamilton-Jacobi-Isaacs (HJI) inequality, yielding us value functions whose zero
-sublevel set corresponds to your desired reachable set.
-Then, you save the solutions in MATLAB and can use the Python interface to access them.
+We compute reachable sets using the Level Set Method to solve the Hamilton-Jacobi-Isaacs (HJI) inequality, yielding us value functions whose zero sublevel set corresponds to your desired reachable set.
+Then, you save the solutions in MATLAB and can use the Python interface wrapper to access them convenient and efficiently during runtime.
 
 ## Overview
 - [Setup](#setup)
 - [MATLAB Toolbox documentation](https://www.cs.ubc.ca/~mitchell/ToolboxLS/toolboxLS-1.1.pdf).
-- [Python examples](./examples)
+- [Python example scripts](./scripts)
 
 ## Setup
 This repository consists of both a Python package and a MATLAB example script.
-We first go through the setup and usage of the MATLAB Level Set Toolbox and then introduce our Python wrapper with examples.
+We first go through the setup and usage of the `MATLAB Level Set Toolbox` and then introduce our `Python wrapper` with examples.
 
 ### MATLAB - Computing reachable sets
 For detailed documentation about boundary conditions, general notation and usage of the MATLAB toolbox, please refer to [Documentation of MATLAB Toolbox](https://www.cs.ubc.ca/~mitchell/ToolboxLS/toolboxLS-1.1.pdf).
@@ -43,7 +38,7 @@ This script will save the information required to extract out the reachable sets
 These examples have presets just to be illustrative, go ahead and change them
 to match the requirements of your project.
 
-### Python - Using levelsets
+### Python - Using level sets
 In order to globally install the Python package referencing the local `resources` directory execute the following in the root directory of this repository
 ```bash
 pip install -e .
@@ -61,20 +56,54 @@ This wrapper class creates sublevel instances of the GridData class to facilitat
 You can find some basic examples of how to use the `pylevel` package under `./examples`.
 
 
-### Python - Add custom dataset
-In order to add your own generated dataset simply follow the following steps.
+### Python - Define custom level sets
+In order to access the level set wrapper from an external project it is recommended to define a `enum.IntEnum` to path `string` structured module such as the following snippet of `pylevel.datasets` module. But instead as module located in your external package for example `your_module.sets.py` where you only import `pylevel` to access the datasets `LevelSet` type.
 
-1. Generate the dataset in MATLAB and store the `your_file.m` file under `./resources/your_name/your_file.m`
-2. Add an entry to the Python module `datasets.py` in the `pylevel` package.
-    - Add an enumeration entry with `YourName` and the next integer
-    - Add a path entry from the new enumeration
-3. Instantiate the Loader with the `dataset=pylevel.datasets.LevelSet.YourName` argument
+```python
+import pylevel
 
-All provided loader scripts will then automatically fetch the corresponding file whenever the loader receives your new `LevelSet` enumeration type as the argument `dataset`.
 
-For usage examples of the Python wrapper see
-- [Levelsets at time](examples/timed_levelsets.py)
-- [Convexified levelset](examples/convexified.py)
+## Example implementation of level set type declaration
+class LevelSet(pylevel.datasets.LevelSet):
+    YourLevelSetName = 1
+
+
+## Note that here the LevelSet name and the *.mat file name do not need to coincide.
+cwd = os.path.dirname(os.path.abspath(__file__))
+path = dict()
+path[LevelSet.YourLevelSetName] = cwd + "/../resources/YourLevelSetName.mat"
+
+string2levelset = dict()
+string2levelset["your_config_string_name"] = LevelSet.YourLevelSetName
+```
+
+In your package this would look something like this
+
+```python
+import pylevel
+
+
+from your_module.sets import path
+from your_module.sets import LevelSet
+
+
+if __name__ == "__main__":
+    level_set_type = LevelSet.YourLevelSetName
+
+    wrapper = pylevel.wrapper.LevelSetWrapper(
+            label="ExampleLevelSet",
+            path=path[level_set_type])
+```
+
+_Note: Here the `string2levelset` allows to potentially fetch string arguments from `*.yaml` or `*.json` configurations (as usually used in ROS packages) and the `LevelSetExample` allows to programatically use specific level set wrappers avoiding stringified conditions for `IntelliSense`._
+
+For usage examples of the Python wrapper see the scripts directory
+- [Levelsets at time](scripts/timed_level_sets.py)
+
 
 ## Contribution
 If you have found things to improve or you have questions, please create a pull request to let us know.
+
+
+## LICENSE
+See the `LICENSE` file for details of the available open source licensing.
