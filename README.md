@@ -1,4 +1,4 @@
-# SML's Hamilton-Jacobi Reachability Analysis Toolchain
+# Hamilton-Jacobi Reachability Analysis Toolchain
 In this repository we introduce the toolchain for using _Hamilton-Jacobi Reachability_ through a combination of MATLAB and Python, allowing to solve for reachable sets of dynamical systems with strong guarantees.
 
 We compute reachable sets using the Level Set Method to solve the Hamilton-Jacobi-Isaacs (HJI) inequality, yielding us value functions whose zero sublevel set corresponds to your desired reachable set.
@@ -14,7 +14,7 @@ This repository consists of both a Python package and a MATLAB example script.
 We first go through the setup and usage of the `MATLAB Level Set Toolbox` and then introduce our `Python wrapper` with examples.
 
 ### MATLAB - Computing reachable sets
-For detailed documentation about boundary conditions, general notation and usage of the MATLAB toolbox, please refer to [Documentation of MATLAB Toolbox](https://www.cs.ubc.ca/~mitchell/ToolboxLS/toolboxLS-1.1.pdf).
+For detailed documentation about boundary conditions, general notation and usage of the MATLAB toolbox, please refer to the [documentation of MATLAB Toolbox](https://www.cs.ubc.ca/~mitchell/ToolboxLS/toolboxLS-1.1.pdf).
 
 
 Currently, the most stable toolbox for computing solutions to the HJI inequality
@@ -49,7 +49,7 @@ The package `pylevel` is composed of a wrapper, which provides convenience metho
 - `get_reachable_set`: Returns the minimal time to reach level set (Rounds state to next grid state)
 - `get_reachable_set_at_time`: Returns the level set at specified or closest discretised time index
 
-_Note: For all set retrieval methods it is possible to specify the `convexified=True` argument to receive only the vertices of the level sets convex hull._
+_Note: For all set retrieval methods it is possible to specify the `convexified=True` argument to receive only the vertices of the level sets convex hull for convenient visualisation of the corresponding sets._
 
 You can find some basic examples of how to use the `pylevel` package under `./scripts`.
 
@@ -82,8 +82,8 @@ In your package this would look something like this
 import pylevel
 
 
-from your_module.sets import path
-from your_module.sets import LevelSet
+from your_package.sets import path
+from your_package.sets import LevelSet
 
 
 if __name__ == "__main__":
@@ -94,7 +94,7 @@ if __name__ == "__main__":
             path=path[level_set_type])
 ```
 
-_Note: Here the `string2levelset` allows to potentially fetch string arguments from `*.yaml` or `*.json` configurations (as usually used in ROS packages) and the `LevelSetExample` allows to programatically use specific level set wrappers avoiding stringified conditions for `IntelliSense`._
+_Note: Here the `string2levelset` allows to potentially fetch string arguments from `*.yaml` or `*.json` configurations (as usually used in ROS packages) and the `LevelSetExample` allows to programatically use specific level set wrappers with support of `IntelliSense`._
 
 For usage examples of the Python wrapper see the scripts directory
 - [Levelsets at time](scripts/timed_level_sets.py)
