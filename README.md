@@ -44,20 +44,19 @@ In order to globally install the Python package referencing the local `resources
 pip install -e .
 ```
 
-**Basic package structure:**
+The package `pylevel` is composed of a wrapper, which provides convenience methods such as
+- `is_member`: to check if a state is in any of the level sets
+- `get_reachable_set`: Returns the minimal time to reach level set (Rounds state to next grid state)
+- `get_reachable_set_at_time`: Returns the level set at specified or closest discretised time index
 
-Since it is typically inconvenient to use MATLAB in most robotics or hardware-based control projects, we have written a simple Python interface for working with the output of the Level Set Toolbox and helperOC.
-Once you have computed the reachable sets of interest, you can load them into Python using scipy's `loadmat` function and then contstruct a `GridData` object using the data.
+_Note: For all set retrieval methods it is possible to specify the `convexified=True` argument to receive only the vertices of the level sets convex hull._
 
-You can find all Python classes in the package `pylevel`.
-The package `pylevel` is composed of a wrapper, which is a subclass of the `loader` to load the ma file from MATLAB.
-This wrapper class creates sublevel instances of the GridData class to facilitate convenient access to value functions across grid indices.
-
-You can find some basic examples of how to use the `pylevel` package under `./examples`.
+You can find some basic examples of how to use the `pylevel` package under `./scripts`.
 
 
 ### Python - Define custom level sets
-In order to access the level set wrapper from an external project it is recommended to define a `enum.IntEnum` to path `string` structured module such as the following snippet of `pylevel.datasets` module. But instead as module located in your external package for example `your_module.sets.py` where you only import `pylevel` to access the datasets `LevelSet` type.
+In order to access the level set wrapper from an external project it is recommended to define a `enum.IntEnum` to path `string` structured module such as the `pylevel.datasets` module.
+But instead with the module located in your external package for example `your_package/sets.py`, in which you now only have to `import pylevel` to access the datasets `LevelSet` type and define the following structure.
 
 ```python
 import pylevel
