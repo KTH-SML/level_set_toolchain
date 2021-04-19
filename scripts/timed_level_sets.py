@@ -14,7 +14,7 @@ import pylevel
 
 if __name__ == '__main__':
     ## Show exemplified enum to path usage from pylevel.datasets module
-    level_set_type = pylevel.datasets.LevelSet.Drone
+    level_set_type = pylevel.datasets.LevelSetExample.Drone
 
     wrapper = pylevel.wrapper.LevelSetWrapper(
             label="ExampleLevelSet",

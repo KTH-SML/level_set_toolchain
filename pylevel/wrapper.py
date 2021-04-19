@@ -72,9 +72,11 @@ class LevelSetWrapper:
 
     def _initialise_from_raw_data(self):
         ## Initialise loader (without storing raw data reference)
-        data = loadmat(path)
+        data = loadmat(self.path)
         # Grid with ds dimensional array and Nx1, Nx2, Nx3, Nxn entries
         self.grid = data['g']
+        # States
+        self.states = dict()
         # Time as list from 0 to tf
         self.time = data['BRS_time'].tolist()[0]
         # Value function with dx1, dx2, ..., dxn, t
@@ -123,10 +125,17 @@ class LevelSetWrapper:
             for index in grid_indices:
                 states.append(parser.get_state_of_index(index))
                 value_function_dict[tuple(states[-1])] = parser.data[index]
+
+            ## Asume numpy array
             states = numpy.array(states)
 
+            d = dict()
             ## Append states to global (whole time interval) state set
-            self.states.update(**dict([(state,None) for state in states]))
+            self.states.update(
+                    dict([
+                            (tuple(state.reshape((-1, 1)).tolist()), True)
+                            for state in states
+                        ]))
 
             ## Dict with indice key and boolean to define membership
             level_set_dict['grid_indices'] = grid_indices

@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+""" Module defining exemplatory dataset usage.
+
+    Author: Philipp Rothenhäusler, Stockholm 2021
+
+"""
 
 import os
 import enum
@@ -14,19 +19,20 @@ __status__ = "Development"
 class LevelSet(enum.IntEnum):
     pass
 
-## Example implementation of level sets
-class LevelSetExample(LevelSet):
+
+## Example implementation of level sets for prominent dynamical systems
+class LevelSetExample(LevelSet, enum.IntEnum):
     SVEA = 1
     Drone = 2
 
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 path = dict()
-path[LevelSet.SVEA] = cwd + "/../resources/svea/TTR_and_grad.mat"
-path[LevelSet.Drone] = cwd + "/../resources/quad4D/BRS.mat"
+path[LevelSetExample.SVEA] = cwd + "/../resources/svea/TTR_and_grad.mat"
+path[LevelSetExample.Drone] = cwd + "/../resources/quad4D/BRS.mat"
 # path[LevelSet.Drone] = cwd + "/../resources/quad4D/low_res_BRS.mat"
 
 string2levelset = dict()
-string2levelset["svea"] = LevelSet.SVEA
-string2levelset["drone"] = LevelSet.Drone
+string2levelset["svea"] = LevelSetExample.SVEA
+string2levelset["drone"] = LevelSetExample.Drone
 

@@ -63,7 +63,7 @@ import pylevel
 
 
 ## Example implementation of level set type declaration
-class LevelSet(pylevel.datasets.LevelSet):
+class LevelSet(pylevel.datasets.LevelSet, enum.IntEnum):
     YourLevelSetName = 1
 
 

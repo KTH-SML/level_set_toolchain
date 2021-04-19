@@ -7,11 +7,10 @@ in.
 """
 
 import attr
-import typing
 import numpy
-# Legacy
-import numpy as np
+import typing
 from scipy.interpolate import interpn
+
 
 __license__ = "MIT"
 __author__ = "Frank Jiang, Philipp Rothenhäusler"
@@ -22,16 +21,16 @@ __status__ = "Development"
 
 @attr.s
 class Grid:
-    '''Python object version of HJB toolbox grids'''
+    """Python object version of HJB toolbox grids"""
 
     grid = attr.ib(type=numpy.array)
     debug_is_enabled = attr.ib(default=False, type=bool)
     show_config = attr.ib(default=False, type=bool)
 
     def __attrs_post_init__(self):
-        '''Fills object based on input matlab grid numpy array imported by
+        """Fills object based on input matlab grid numpy array imported by
         scipy.io.loadmat
-        '''
+        """
         g = self.grid[0][0]
         # dimension of state space
         self.dim = g[0][0][0]
@@ -62,20 +61,21 @@ class Grid:
             print('Grid step size: ', self.dx)
 
     def _assert_valid_state(self, x):
-        assert len(x) == self.dim, "Input is wrong dimension"
+        """ Verify dimensionality. """
         assert self.in_grid(x), \
                "Given state {0} not in grid ({1} - {2})".format(x,
                                                                 self.min,
                                                                 self.max)
 
-    def _assert_valid_idx(self, idx):
-        assert len(idx) == self.dim, "Input is wrong dimension"
+    # def _assert_valid_idx(self, idx):
+    #     """ Verify dimensionality. """
+    #     assert len(idx) == self.dim, "Input is wrong dimension"
 
     def in_grid(self, x):
         assert len(x) == self.dim, "Input is wrong dimension"
-        if not np.isnan(np.sum(np.array(x))):
-            above_min = np.array(x) > np.array(self.min)
-            below_max = np.array(x) < np.array(self.max)
+        if not numpy.isnan(numpy.sum(numpy.array(x))):
+            above_min = numpy.array(x) > numpy.array(self.min)
+            below_max = numpy.array(x) < numpy.array(self.max)
             return above_min.all() and below_max.all()
         else:
             return False
@@ -84,7 +84,8 @@ class Grid:
         return "addGhostPeriodic" in self.bdry[dim][0][0][3][0][0][0][0]
 
     def get_index_of_rounded_state(self, x):
-        self._assert_valid_state(x)
+        """ Return grid index of state rounded to next grid index. """
+        # LEGACY -  self._assert_valid_state(x)
         index = list()
         for i in range(len(x)):
             dx = self.dx[i]
@@ -92,42 +93,44 @@ class Grid:
         return tuple(index)
 
     def get_state_of_index(self, index):
-        self._assert_valid_idx(index)
+        """ Return state of grid index. """
+        # LEGACY - self._assert_valid_idx(index)
         state = []
-        # dimensions
+        # Iterate over each dimension
         for di in range(len(index)):
             # Get dimension-based grid step size
             dx = self.dx[di]
             state.append(index[di] * dx + self.min[di])
-        return state
+        ## TODO: Verify returned value is numpy
+        return numpy.array(state)
 
     # LEGACY
-    def get_idx(self, x):
-        self._assert_valid_state(x)
-        idx = []
-        for i in range(len(x)):
-            dx = self.dx[i]
-            idx.append(int(round((x[i] - self.min[i])/dx)))
-        return tuple(idx)
+    #def get_idx(self, x):
+    #    self._assert_valid_state(x)
+    #    idx = []
+    #    for i in range(len(x)):
+    #        dx = self.dx[i]
+    #        idx.append(int(round((x[i] - self.min[i])/dx)))
+    #    return tuple(idx)
 
     # LEGACY
-    def get_state(self, idx):
-        self._assert_valid_idx(idx)
-        state = []
-        # dimensions
-        for di in range(len(idx)):
-            # Get dimension-based grid step size
-            dx = self.dx[di]
-            state.append(idx[di] * dx + self.min[di])
-        return state
+    #def get_state(self, idx):
+    #    self._assert_valid_idx(idx)
+    #    state = []
+    #    # dimensions
+    #    for di in range(len(idx)):
+    #        # Get dimension-based grid step size
+    #        dx = self.dx[di]
+    #        state.append(idx[di] * dx + self.min[di])
+    #    return state
 
 
 @attr.s
 class GridData(Grid):
-    ''' Encapsulates functions for both grid and data functions on
+    """ Encapsulates functions for both grid and data functions on
         imported MATLAB data.
 
-    '''
+    """
     ## Value function entries for meshed state space with
     ## indices according to grid_indices
     data = attr.ib(default=None, type=typing.Optional[numpy.array])
@@ -137,19 +140,19 @@ class GridData(Grid):
         self._augmentPeriodicData()
 
     def _augmentPeriodicData(self):
-        '''Ported from Mo Chens augmentPeriodicData.m in helporOC git
+        """Ported from Mo Chens augmentPeriodicData.m in helporOC git
         repo.
 
         Helps deal with periodic data axes.
-        '''
+        """
 
         for i in range(self.dim):
             if self._is_periodic_dim(i): #clunky...
-                self.vs[i] = np.append(self.vs[i], self.vs[i][-1] + self.dx[i])
+                self.vs[i] = numpy.append(self.vs[i], self.vs[i][-1] + self.dx[i])
 
                 # create correct concatenation to make axes i "periodic"
                 colon = slice(0, None)
-                # colons = [colon for _ in range(self.dim)] + [np.newaxis]
+                # colons = [colon for _ in range(self.dim)] + [numpy.newaxis]
                 colons = [colon for _ in range(self.dim)]
                 colons[i] = 0 # used to be 1, should be 0, but check later
                 colons = tuple(colons)
@@ -159,7 +162,7 @@ class GridData(Grid):
                 aug_shape = tuple(aug_shape)
                 aug_dim_data = self.data[colons].reshape(aug_shape)
 
-                self.data = np.concatenate(
+                self.data = numpy.concatenate(
                         (self.data, aug_dim_data),
                         axis = i)
 
@@ -168,17 +171,19 @@ class GridData(Grid):
 
         return self.data[idx]
 
-    def get_interp_value(self, x, method='linear'):
-        '''Ported from Mo Chens eval_u.m in helperOC git repo.
+    # LEGACY def get_interp_value(self, x, method='linear'):
+    def get_interpolated_value(self, x, method='linear'):
+        """ Ported from Mo Chens eval_u.m in helperOC git repo.
 
-        Evaluates interpolated value from value function over grid.
-        '''
+            Note:
+                Evaluates interpolated value from value function over grid.
+        """
 
         if type(x) == type([]):
-            x = np.array(x).reshape((1, self.dim))
+            x = numpy.array(x).reshape((1, self.dim))
         else:
-            assert type(x) == type(np.array([])), \
-                   "Input x should be list or numpy array, gave a {0}".format(type(x))
+            assert type(x) == type(numpy.array([])), \
+                   "Inumpy.t x should be list or numpy array, gave a {0}".format(type(x))
             assert len(x.shape) <= 2, "Input x should be vector"
             assert max(x.shape) == self.dim, \
                     "Input x (dim={0}) wrong dimension".format(max(x.shape))
@@ -210,9 +215,13 @@ class GridData(Grid):
         return interpn(points, self.data, x, method=method)[0]
 
     def sublevel_set_idx(self, level=0.0):
-        """Return sublevel set incl. boundary (non-strict sublevel set)
+        """ Return sublevel set incl. boundary
+
+            Note:
+                non-strict sublevel set
+
         """
-        index_array = np.where(self.data <= level)
+        index_array = numpy.where(self.data <= level)
         indices = []
         for i in range(len(index_array[0])):
             curr_index = [index_array[j][i] for j in range(len(index_array))]
@@ -220,9 +229,13 @@ class GridData(Grid):
         return indices
 
     def superlevel_set_idx(self, level=0.0):
-        """Return superlevel set incl. boundary (non-strict superlevel
-        set)"""
-        index_array = np.where(self.data >= level)
+        """ Return superlevel set incl. boundary
+
+            Note:
+                non-strict superlevel set
+
+        """
+        index_array = numpy.where(self.data >= level)
         indices = []
         for i in range(len(index_array[0])):
             curr_index = [index_array[j][i] for j in len(index_array)]
