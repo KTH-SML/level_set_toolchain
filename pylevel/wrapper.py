@@ -4,7 +4,7 @@
     Author: Philipp Rothenhäusler, Stockholm 2020
 
 """
-
+import os
 import attr
 import numpy
 import typing
@@ -24,14 +24,19 @@ __status__ = "Development"
 
 
 @attr.s
-class LevelSetWrapper:
-    """ Encapsulates level set functions.
+class ReachableSetWrapper:
+    """ Encapsulates convenience methods to access reachable sets.
 
         Note:
-            Either initialise using previously exported `*.levelset` o
+            Initialise using previously exported `*.levelset` using
+            the `from_memory` argument or parse a label and path to
+            initialise from a `*.mat` file.
 
-            - GridData is a parser to provide access to grid indices and their
-            respective states, value function values or sublevel sets.
+            ReachableSetData provides access to grid indices and their
+            respective states using Grid, value function values or sublevel sets.
+
+            On initialisation for each discretised time step a
+            ReachableSetData entry is added to the `sets` attribute.
 
     """
     ## Initialisation arguments
@@ -41,22 +46,25 @@ class LevelSetWrapper:
     ## 2. (optional) Initialisation from raw data using path to *.mat file
     path = attr.ib(default=None, type=typing.Optional[str])
 
-    grid_helper = attr.ib(default=None, type=typing.Optional[pylevel.grid.Grid])
-    grid = attr.ib(default=None, type=typing.Optional[dict])
+    grid = attr.ib(default=None, type=typing.Optional[pylevel.data.Grid])
     time = attr.ib(default=None, type=typing.Optional[list])
 
     ## Sets dictionary with (key,value) of type (time,LevelSetDict)
     ## -> The LevelSetDict consists of
-    # keys: (grid_indices,states,value_function,parser)
+    # keys: (grid_indices,states,value_function,ReachableSetData)
     # type: (list,numpy.array,dict,GridData)
-    sets = attr.ib(default=None, type=typing.Optional[dict])
-    value_function = attr.ib(default=None, type=typing.Optional[dict])
+    sets = attr.ib(
+            default=None,
+            type=typing.Optional[typing.Dict[float, pylevel.data.ReachableSetData]])
+    value_function = attr.ib(
+            default=None,
+            type=typing.Optional[typing.Dict[tuple, numpy.ndarray]])
 
     ## Global state set dictionary with (key,value) of type (state,None)
     states = attr.ib(default=None, type=typing.Optional[dict])
 
-    _show_config = attr.ib(default=False, type=bool)
-    _debug_is_enabled = attr.ib(default=False, type=bool)
+    show_config = attr.ib(default=False, type=bool)
+    debug_is_enabled = attr.ib(default=False, type=bool)
 
     def __attrs_post_init__(self):
         if self.from_memory is not None:
@@ -82,60 +90,71 @@ class LevelSetWrapper:
         # Value function with dx1, dx2, ..., dxn, t
         self.value_function = data['BRS_data']
         # Helper to access grid indices or states and their discretisation
-        self.grid_helper = pylevel.grid.Grid(
+        self.grid = pylevel.data.Grid(
                 grid=self.grid,
-                show_config=self._show_config)
+                show_config=self.show_config,
+                debug_is_enabled=self.debug_is_enabled)
         self._initialise_sets()
 
     def _load_from_memory(self):
         """ Fetch from previously exported (memorised) configuration. """
-        with open(self.from_memory, "rb") as f:
+        path = self.from_memory
+        identifier = self.label + ".levelset"
+        filepath = '/'.join([path, identifier])
+        print('Import from filepath:', filepath)
+        with open(filepath, "rb") as f:
             data_loaded = pickle.load(f)
-        self.__dict__(**data_loaded)
+        self.__dict__.update(**data_loaded)
 
-    def _debug(self, *args):
+    def debug(self, *args):
         """ Print debug messages if debugging is enabled. """
-        if self._debug_is_enabled:
+        if self.debug_is_enabled:
             print("LevelSetWrapper: ", *args)
 
-    def export(self, identifier, path):
-        """ Export  """
-        with open('/'.join([path,identifier]), "wb") as f:
+    def export(self, path : str = None):
+        """ Export current class as pickle dump. """
+        path = os.getcwd() if path is None else path
+        identifier = self.label + ".levelset"
+        filepath = '/'.join([path,identifier])
+        print('Export to filepath:', filepath)
+        with open(filepath, "wb") as f:
             pickle.dump(self.__dict__, f)
-        self._debug("Exported levelset: {} with identifier: {}".format(
+        self.debug("Exported levelset: {} with identifier: {}".format(
             self.label, identifier))
 
     def _initialise_sets(self):
+        """ Iterate over discretised time and initialise corresponding ttr. """
         self.sets = dict()
+        grid = self.grid
         for t_idx,_ in enumerate(self.time):
+            self.debug('Initialising set:', t_idx)
             level_set_dict = dict()
             grid_indices = dict()
 
-            # GridData provides parser functionality to access sets, values and grid_indices
-            parser = pylevel.grid.GridData(
-                    grid=self.grid,
+            ## ReachableSetData provides parser functionality
+            # to access sets, values and grid_indices
+            reachable_set = pylevel.data.ReachableSetData(
+                    grid=grid,
                     data=self.value_function[:, :, :, :, t_idx])
-            indices = parser.sublevel_set_idx(level=0.0)
-            for entry in indices:
-                grid_indices[entry] = True
+            indices = reachable_set.sublevel_set(level=0.0)
+            for index in indices:
+                grid_indices[index] = True
 
             # Collect states from grid indices and conveniently create dict
             states = list()
             value_function_dict = dict()
             for index in grid_indices:
-                states.append(parser.get_state_of_index(index))
-                value_function_dict[tuple(states[-1])] = parser.data[index]
+                state = grid.state(index)
+                states.append(state)
+                value_function_dict[tuple(state)] = reachable_set.value_function(state)
 
             ## Asume numpy array
             states = numpy.array(states)
 
-            d = dict()
-            ## Append states to global (whole time interval) state set
-            self.states.update(
-                    dict([
-                            (tuple(state.reshape((-1, 1)).tolist()), True)
-                            for state in states
-                        ]))
+            for state in states:
+                ## Create tuple
+                t = tuple(state.flatten().tolist())
+                self.states[t] = None
 
             ## Dict with indice key and boolean to define membership
             level_set_dict['grid_indices'] = grid_indices
@@ -143,19 +162,21 @@ class LevelSetWrapper:
             level_set_dict['states'] = states
             ## Dict with state key and value function value entry
             level_set_dict['value_function'] = value_function_dict
-            level_set_dict['parser'] = parser
+            level_set_dict['reachable_set'] = reachable_set
 
             ## Convexify states
             hull = ConvexHull(states)
-            vertices = [hull.points[[i], :].reshape(-1,1) for i in hull.vertices]
+            vertices = [hull.points[[i], :].reshape(-1, 1) for i in hull.vertices]
             vertices = numpy.squeeze(numpy.array(vertices))
             level_set_dict['states_convexified'] = vertices
 
             ## Update global set dictionary
             self.sets[t_idx] = level_set_dict
-        print('All sets initialised.')
+        self.debug('All sets initialised.')
 
-    def get_reachable_set_at_time(self, t, convexified=False):
+    def _get_reachable_set_at_time(self,
+            t : float,
+            convexified=False):
         """ Return level set set at time t or closest discretised index. """
         ts = numpy.array(self.time)
         t_idx = numpy.abs(ts - t).argmin()
@@ -164,17 +185,13 @@ class LevelSetWrapper:
 
         return self.sets[int(numpy.asscalar(t_idx))][state_key]
 
-    def get_reachable_set(self, state : list, convexified=False):
-        """ Return reachable states and its set index.
+    def _get_minimal_ttr_set(self,
+            state : numpy.ndarray,
+            convexified : bool=False):
+        """ Return minimial time to reach set and its discretised time. """
 
 
-            Note:
-                This is the minimal time to reach levelset.
-
-        """
-
-
-        closest_grid_index = self.grid_helper.get_index_of_rounded_state(state)
+        closest_grid_index = self.grid.index(state)
 
         state_key = "states_convexified" if convexified else "states"
 
@@ -184,6 +201,16 @@ class LevelSetWrapper:
             if closest_grid_index in grid_indices:
                 return set_dictionary[state_key], self.time[time_index]
 
-        print('Failed to find index in any set: Unreachable')
-        raise RuntimeError()
+        self.debug('Failed to find index in any set: Unreachable')
+        raise pylevel.error.StateNotReachableError()
+
+    @property
+    def reach_at_t(self):
+        """ Return reachable set for state. """
+        return self._get_reachable_set_at_time
+
+    @property
+    def min_ttr(self):
+        """ Return minimum reachable set for state. """
+        return self._get_minimal_ttr_set
 
