@@ -210,7 +210,7 @@ class ReachableSetWrapper:
         return self._get_reachable_set_at_time
 
     @property
-    def min_ttr(self):
+    def reach_at_min_ttr(self):
         """ Return minimum reachable set for state. """
         return self._get_minimal_ttr_set
 
