@@ -19,15 +19,15 @@ __status__ = "Development"
 
 def visualise_2d(wrapper, states, time,
         show=True, show_image=False, **plot_options):
-    grid_helper = wrapper.grid_helper
+    grid = wrapper.grid
     options = dict(c=numpy.random.rand(3,),linewidth=3, alpha=0.3)
     options.update(plot_options)
 
     convex_hull = ConvexHull(states)
 
     if show_image:
-        img_width = grid_helper.N[0]
-        img_height = grid_helper.N[1]
+        img_width = grid.N[0]
+        img_height = grid.N[1]
         img = hull_img(convex_hull, img_width, img_height)
         plt.imshow(img, "gray", alpha = 0.4)
 
