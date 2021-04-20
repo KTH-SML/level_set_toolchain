@@ -1,6 +1,13 @@
 #!/usr/bin/env python
+""" Package wrapping *.mat reachable sets from level set method.
+
+    Author: Philipp Rothenhäusler, Stockholm 2021
+
+"""
+from pylevel import error
 from pylevel import utilities
 from pylevel import datasets
 
-from pylevel import grid
+## Import
+from pylevel import data
 from pylevel import wrapper
