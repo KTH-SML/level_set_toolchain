@@ -230,7 +230,7 @@ class ReachableSetData:
         ## TODO: Check if returning numpy value
         return interpn(points, self.data, x, method=method)[0]
 
-    def sublevel_set_idx(self, level=0.0):
+    def _get_sublevel_set_indices(self, level=0.0) -> typing.List[tuple]:
         """ Return sublevel set incl. boundary
 
             Note:
@@ -244,7 +244,7 @@ class ReachableSetData:
             indices.append(tuple(curr_index))
         return indices
 
-    def superlevel_set_idx(self, level=0.0):
+    def _get_superlevel_set_indices(self, level=0.0) -> typing.List[tuple]:
         """ Return superlevel set incl. boundary
 
             Note:
@@ -258,7 +258,7 @@ class ReachableSetData:
             indices.append(tuple(curr_index))
         return indices
 
-    def get_value_function_of_rounded_state(self,
+    def _get_value_function_of_rounded_state(self,
             x : numpy.ndarray) -> numpy.ndarray:
         """ Return value function for closest grid index. """
         index = self.grid.index(x)
@@ -272,13 +272,15 @@ class ReachableSetData:
 
     @property
     def sublevel_set(self):
-        raise NotImplementedError()
+        """ Read-only return of sub level function. """
+        return self._get_sublevel_set_indices
 
     @property
     def superlevel_set(self):
-        raise NotImplementedError()
+        """ Read-only return of super level function. """
+        return self._get_superlevel_set_indices
 
     @property
     def value_function(self):
         """ Read-only return of value function. """
-        return self.get_value_function_of_rounded_state
+        return self._get_value_function_of_rounded_state
