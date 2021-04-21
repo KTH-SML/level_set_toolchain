@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Grid module providing objects to interface with imported *.mat file.
+""" Grid module providing objects to interface with imported .mat file.
 
     Grid module containing classes that work with saved MATLAB outputs
     of the Level Set Toolbox and helperOC.
@@ -32,7 +32,7 @@ class InterpolationMethod(enum.IntEnum):
 
 @attr.s
 class Grid:
-    """ Grid component for interfacing *.mat level sets. """
+    """ Grid component for interfacing .mat level sets. """
 
     ## Discretisation grid
     grid = attr.ib(type=numpy.array)
@@ -196,7 +196,7 @@ class ReachableSetData:
                         (self.data, aug_dim_data),
                         axis = i)
 
-    def get_interpolated_value(self,
+    def _get_interpolated_value(self,
             x : numpy.ndarray,
             interpolation_method : InterpolationMethod = InterpolationMethod.Linear) \
                 -> numpy.ndarray:
