@@ -6,11 +6,16 @@
 Welcome to pylevel's documentation!
 ===================================
 
+Following you can find a documentation of the
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    pylevel
+
+   examples
 
 
 
