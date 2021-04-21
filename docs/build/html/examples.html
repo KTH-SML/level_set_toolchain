@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Examples &mdash; pylevel 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="pylevel package" href="pylevel.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> pylevel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pylevel.html">pylevel package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-new-enumeration-identifiers">Creating new enumeration identifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#levelset-access">Levelset access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#import-and-export-for-improved-initialisation">Import and Export for improved initialisation</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pylevel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Examples</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/examples.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="creating-new-enumeration-identifiers">
+<h2>Creating new enumeration identifiers<a class="headerlink" href="#creating-new-enumeration-identifiers" title="Permalink to this headline">¶</a></h2>
+<p>To be documented</p>
+</div>
+<div class="section" id="levelset-access">
+<h2>Levelset access<a class="headerlink" href="#levelset-access" title="Permalink to this headline">¶</a></h2>
+<p>To be documented</p>
+</div>
+<div class="section" id="import-and-export-for-improved-initialisation">
+<h2>Import and Export for improved initialisation<a class="headerlink" href="#import-and-export-for-improved-initialisation" title="Permalink to this headline">¶</a></h2>
+<p>In order to accelerate the initialisation the export feature can be utilised to avoid the building process of the reachable set dictionaries.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot; Example for level set wrapper usage.</span>
+
+<span class="sd">    Author: Philipp Rothenhäusler, Stockholm 2020</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+
+<span class="kn">import</span> <span class="nn">pylevel</span>
+
+
+<span class="n">LABEL</span> <span class="o">=</span> <span class="s2">&quot;ExampleLevelSet&quot;</span>
+<span class="n">FROM_MEMORY</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">EXEMPLIFY_DEBUG_VERBOSITY</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">level_set_type</span> <span class="o">=</span> <span class="n">pylevel</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">LevelSetExample</span><span class="o">.</span><span class="n">Drone</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">FROM_MEMORY</span><span class="p">:</span>
+        <span class="n">wrapper</span> <span class="o">=</span> <span class="n">pylevel</span><span class="o">.</span><span class="n">wrapper</span><span class="o">.</span><span class="n">ReachableSetWrapper</span><span class="p">(</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">LABEL</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">pylevel</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="n">level_set_type</span><span class="p">],</span>
+                <span class="n">debug_is_enabled</span><span class="o">=</span><span class="n">EXEMPLIFY_DEBUG_VERBOSITY</span><span class="p">)</span>
+        <span class="n">wrapper</span><span class="o">.</span><span class="n">export</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wrapper</span> <span class="o">=</span> <span class="n">pylevel</span><span class="o">.</span><span class="n">wrapper</span><span class="o">.</span><span class="n">ReachableSetWrapper</span><span class="p">(</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">LABEL</span><span class="p">,</span>
+                <span class="n">from_memory</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+                <span class="n">debug_is_enabled</span><span class="o">=</span><span class="n">EXEMPLIFY_DEBUG_VERBOSITY</span><span class="p">)</span>
+
+        <span class="c1">## Time steps from final time tf to t0</span>
+        <span class="n">t_idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">wrapper</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+        <span class="n">t_idx</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+
+        <span class="c1">## Time indexed access of levelsets</span>
+        <span class="n">levelsets_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">wrapper</span><span class="o">.</span><span class="n">reach_at_t</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">t_idx</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">levelset_states</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">levelsets_states</span><span class="p">,</span><span class="n">t_idx</span><span class="p">):</span>
+            <span class="n">states_sliced</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span>
+                <span class="n">levelset_states</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                <span class="n">levelset_states</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">2</span><span class="p">]]])</span>
+            <span class="n">pylevel</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">visualise_2d</span><span class="p">(</span><span class="n">wrapper</span><span class="p">,</span> <span class="n">states_sliced</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_image</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">pylevel</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">show_plots_for_time</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="o">=.</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="n">pylevel</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">show_plots</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="pylevel.html" class="btn btn-neutral float-left" title="pylevel package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2021, Philipp Rothenhäusler, Frank Jiang
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

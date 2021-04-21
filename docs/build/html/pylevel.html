@@ -1,0 +1,471 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pylevel package &mdash; pylevel 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="Welcome to pylevel’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> pylevel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">pylevel package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pylevel.data">pylevel.data module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pylevel.datasets">pylevel.datasets module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pylevel.error">pylevel.error module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pylevel.utilities">pylevel.utilities module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pylevel.wrapper">pylevel.wrapper module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pylevel">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pylevel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>pylevel package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/pylevel.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pylevel-package">
+<h1>pylevel package<a class="headerlink" href="#pylevel-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pylevel.data">
+<span id="pylevel-data-module"></span><h2>pylevel.data module<a class="headerlink" href="#module-pylevel.data" title="Permalink to this headline">¶</a></h2>
+<p>Grid module providing objects to interface with imported .mat file.</p>
+<p>Grid module containing classes that work with saved MATLAB outputs
+of the Level Set Toolbox and helperOC.
+Much of the work is ported from helperOC into Python,
+with some additional convenience features added in.</p>
+<dl class="py class">
+<dt id="pylevel.data.Grid">
+<em class="property">class </em><code class="sig-prename descclassname">pylevel.data.</code><code class="sig-name descname">Grid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">grid</span><span class="p">:</span> <span class="n">numpy.array</span></em>, <em class="sig-param"><span class="n">dim</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>numpy.ndarray<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">x_min</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>numpy.ndarray<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">x_max</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>numpy.ndarray<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">N</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>numpy.ndarray<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">boundary</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dx</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>numpy.ndarray<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>numpy.ndarray<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">debug_is_enabled</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">show_config</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.data.Grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Grid component for interfacing .mat level sets.</p>
+<dl class="py method">
+<dt id="pylevel.data.Grid.debug">
+<code class="sig-name descname">debug</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.data.Grid.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print debug messages if debugging is enabled.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.data.Grid.index">
+<em class="property">property </em><code class="sig-name descname">index</code><a class="headerlink" href="#pylevel.data.Grid.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return index from state input.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.data.Grid.print_config">
+<code class="sig-name descname">print_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>numpy.ndarray<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.data.Grid.print_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualise configuration and current state index.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.data.Grid.state">
+<em class="property">property </em><code class="sig-name descname">state</code><a class="headerlink" href="#pylevel.data.Grid.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience access for external access of grid methods.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="pylevel.data.InterpolationMethod">
+<em class="property">class </em><code class="sig-prename descclassname">pylevel.data.</code><code class="sig-name descname">InterpolationMethod</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.data.InterpolationMethod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></p>
+<p>Enumeration identifying interpolation methods for state lookup.</p>
+<dl class="py attribute">
+<dt id="pylevel.data.InterpolationMethod.Linear">
+<code class="sig-name descname">Linear</code><em class="property"> = 1</em><a class="headerlink" href="#pylevel.data.InterpolationMethod.Linear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pylevel.data.InterpolationMethod.Undefined">
+<code class="sig-name descname">Undefined</code><em class="property"> = 0</em><a class="headerlink" href="#pylevel.data.InterpolationMethod.Undefined" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="pylevel.data.ReachableSetData">
+<em class="property">class </em><code class="sig-prename descclassname">pylevel.data.</code><code class="sig-name descname">ReachableSetData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">grid</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#pylevel.data.Grid" title="pylevel.data.Grid">pylevel.data.Grid</a></span></em>, <em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>numpy.array<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">debug_is_enabled</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.data.ReachableSetData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Collection of functions for reachable set at time discretisation.</p>
+<dl class="simple">
+<dt>Note:</dt><dd><p>Fundamental data placeholders are subclassed from Grid.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="pylevel.data.ReachableSetData.debug">
+<code class="sig-name descname">debug</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.data.ReachableSetData.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print debug messages if debugging is enabled.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.data.ReachableSetData.sublevel_set">
+<em class="property">property </em><code class="sig-name descname">sublevel_set</code><a class="headerlink" href="#pylevel.data.ReachableSetData.sublevel_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only return of sub level function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.data.ReachableSetData.superlevel_set">
+<em class="property">property </em><code class="sig-name descname">superlevel_set</code><a class="headerlink" href="#pylevel.data.ReachableSetData.superlevel_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only return of super level function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.data.ReachableSetData.value_function">
+<em class="property">property </em><code class="sig-name descname">value_function</code><a class="headerlink" href="#pylevel.data.ReachableSetData.value_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only return of value function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pylevel.datasets">
+<span id="pylevel-datasets-module"></span><h2>pylevel.datasets module<a class="headerlink" href="#module-pylevel.datasets" title="Permalink to this headline">¶</a></h2>
+<p>Module defining exemplatory dataset usage.</p>
+<p>Author: Philipp Rothenhäusler, Stockholm 2021</p>
+<dl class="py class">
+<dt id="pylevel.datasets.LevelSet">
+<em class="property">class </em><code class="sig-prename descclassname">pylevel.datasets.</code><code class="sig-name descname">LevelSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.datasets.LevelSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></p>
+<p>An enumeration.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="pylevel.datasets.LevelSetExample">
+<em class="property">class </em><code class="sig-prename descclassname">pylevel.datasets.</code><code class="sig-name descname">LevelSetExample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.datasets.LevelSetExample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pylevel.datasets.LevelSet" title="pylevel.datasets.LevelSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylevel.datasets.LevelSet</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="pylevel.datasets.LevelSetExample.Drone">
+<code class="sig-name descname">Drone</code><em class="property"> = 2</em><a class="headerlink" href="#pylevel.datasets.LevelSetExample.Drone" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pylevel.datasets.LevelSetExample.DroneForesight">
+<code class="sig-name descname">DroneForesight</code><em class="property"> = 3</em><a class="headerlink" href="#pylevel.datasets.LevelSetExample.DroneForesight" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pylevel.datasets.LevelSetExample.SVEA">
+<code class="sig-name descname">SVEA</code><em class="property"> = 1</em><a class="headerlink" href="#pylevel.datasets.LevelSetExample.SVEA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pylevel.error">
+<span id="pylevel-error-module"></span><h2>pylevel.error module<a class="headerlink" href="#module-pylevel.error" title="Permalink to this headline">¶</a></h2>
+<dl class="py exception">
+<dt id="pylevel.error.StateLookupError">
+<em class="property">exception </em><code class="sig-prename descclassname">pylevel.error.</code><code class="sig-name descname">StateLookupError</code><a class="headerlink" href="#pylevel.error.StateLookupError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Failed to find index for state.</p>
+<dl class="simple">
+<dt>Note:</dt><dd><p>Verbosify output using debug_is_enabled on
+initialisation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="pylevel.error.StateNotReachableError">
+<em class="property">exception </em><code class="sig-prename descclassname">pylevel.error.</code><code class="sig-name descname">StateNotReachableError</code><a class="headerlink" href="#pylevel.error.StateNotReachableError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Provided state could not be found in reachable set.</p>
+<dl class="simple">
+<dt>Note:</dt><dd><p>Verbosify output using debug_is_enabled on
+initialisation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pylevel.utilities">
+<span id="pylevel-utilities-module"></span><h2>pylevel.utilities module<a class="headerlink" href="#module-pylevel.utilities" title="Permalink to this headline">¶</a></h2>
+<p>Utility functions for level set wrapper.</p>
+<dl class="py function">
+<dt id="pylevel.utilities.build_state_to_reachset_dict">
+<code class="sig-prename descclassname">pylevel.utilities.</code><code class="sig-name descname">build_state_to_reachset_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">BRS_list</span></em>, <em class="sig-param"><span class="n">in_reach_set_idx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.utilities.build_state_to_reachset_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="pylevel.utilities.hull_img">
+<code class="sig-prename descclassname">pylevel.utilities.</code><code class="sig-name descname">hull_img</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hull</span></em>, <em class="sig-param"><span class="n">w</span></em>, <em class="sig-param"><span class="n">h</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.utilities.hull_img" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute image of hull</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pylevel.utilities.in_hull">
+<code class="sig-prename descclassname">pylevel.utilities.</code><code class="sig-name descname">in_hull</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idx</span></em>, <em class="sig-param"><span class="n">hull</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.utilities.in_hull" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if in all half-spaces</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pylevel.utilities.show_plots">
+<code class="sig-prename descclassname">pylevel.utilities.</code><code class="sig-name descname">show_plots</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.utilities.show_plots" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="pylevel.utilities.show_plots_for_time">
+<code class="sig-prename descclassname">pylevel.utilities.</code><code class="sig-name descname">show_plots_for_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_in_seconds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.utilities.show_plots_for_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="pylevel.utilities.visualise_2d">
+<code class="sig-prename descclassname">pylevel.utilities.</code><code class="sig-name descname">visualise_2d</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">wrapper</span></em>, <em class="sig-param"><span class="n">states</span></em>, <em class="sig-param"><span class="n">time</span></em>, <em class="sig-param"><span class="n">show</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">show_image</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">plot_options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.utilities.visualise_2d" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-pylevel.wrapper">
+<span id="pylevel-wrapper-module"></span><h2>pylevel.wrapper module<a class="headerlink" href="#module-pylevel.wrapper" title="Permalink to this headline">¶</a></h2>
+<p>Level set wrapper providing convenience methods.</p>
+<p>Author: Philipp Rothenhäusler, Stockholm 2020</p>
+<dl class="py class">
+<dt id="pylevel.wrapper.ReachableSetWrapper">
+<em class="property">class </em><code class="sig-prename descclassname">pylevel.wrapper.</code><code class="sig-name descname">ReachableSetWrapper</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">label</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">from_memory</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">grid</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#pylevel.data.Grid" title="pylevel.data.Grid">pylevel.data.Grid</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>list<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sets</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">[</span>float<span class="p">, </span><a class="reference internal" href="#pylevel.data.ReachableSetData" title="pylevel.data.ReachableSetData">pylevel.data.ReachableSetData</a><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">value_function</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">[</span>tuple<span class="p">, </span>numpy.ndarray<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">states</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">show_config</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">debug_is_enabled</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.wrapper.ReachableSetWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Encapsulates convenience methods to access reachable sets.</p>
+<dl>
+<dt>Note:</dt><dd><p>Initialise using previously exported <cite>*.levelset</cite> using
+the <cite>from_memory</cite> argument or parse a label and path to
+initialise from a <cite>*.mat</cite> file.</p>
+<p>ReachableSetData provides access to grid indices and their
+respective states using Grid, value function values or sublevel sets.</p>
+<p>On initialisation for each discretised time step a
+ReachableSetData entry is added to the <cite>sets</cite> attribute.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="pylevel.wrapper.ReachableSetWrapper.debug">
+<code class="sig-name descname">debug</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.wrapper.ReachableSetWrapper.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print debug messages if debugging is enabled.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.wrapper.ReachableSetWrapper.export">
+<code class="sig-name descname">export</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.wrapper.ReachableSetWrapper.export" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export current class as pickle dump.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.wrapper.ReachableSetWrapper.is_member">
+<code class="sig-name descname">is_member</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">state</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.wrapper.ReachableSetWrapper.is_member" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return if state is member with level set agnostic membership.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.wrapper.ReachableSetWrapper.reach_at_min_ttr">
+<em class="property">property </em><code class="sig-name descname">reach_at_min_ttr</code><a class="headerlink" href="#pylevel.wrapper.ReachableSetWrapper.reach_at_min_ttr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return minimum reachable set for state.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.wrapper.ReachableSetWrapper.reach_at_t">
+<em class="property">property </em><code class="sig-name descname">reach_at_t</code><a class="headerlink" href="#pylevel.wrapper.ReachableSetWrapper.reach_at_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return reachable set for state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pylevel">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pylevel" title="Permalink to this headline">¶</a></h2>
+<p>Package wrapping .mat reachable sets from level set method.</p>
+<p>Author: Philipp Rothenhäusler, Stockholm 2021</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="examples.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to pylevel’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2021, Philipp Rothenhäusler, Frank Jiang
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
