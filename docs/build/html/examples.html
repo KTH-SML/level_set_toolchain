@@ -36,6 +36,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MATLAB Set Generation" href="matlab.html" />
     <link rel="prev" title="pylevel package" href="pylevel.html" /> 
 </head>
 
@@ -85,11 +86,11 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="pylevel.html">pylevel package</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#creating-new-enumeration-identifiers">Creating new enumeration identifiers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#levelset-access">Levelset access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-new-level-set-types">Creating new level set types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#import-and-export-for-improved-initialisation">Import and Export for improved initialisation</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">MATLAB Set Generation</a></li>
 </ul>
 
             
@@ -157,17 +158,90 @@
             
   <div class="section" id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="creating-new-enumeration-identifiers">
-<h2>Creating new enumeration identifiers<a class="headerlink" href="#creating-new-enumeration-identifiers" title="Permalink to this headline">¶</a></h2>
-<p>To be documented</p>
-</div>
-<div class="section" id="levelset-access">
-<h2>Levelset access<a class="headerlink" href="#levelset-access" title="Permalink to this headline">¶</a></h2>
-<p>To be documented</p>
+<div class="section" id="creating-new-level-set-types">
+<h2>Creating new level set types<a class="headerlink" href="#creating-new-level-set-types" title="Permalink to this headline">¶</a></h2>
+<p>In order to access the level set wrapper from an external project it is recommended to define a <code class="docutils literal notranslate"><span class="pre">enum.IntEnum</span></code> to path <code class="docutils literal notranslate"><span class="pre">string</span></code> structured module such as the <code class="docutils literal notranslate"><span class="pre">pylevel.datasets</span></code> module.
+But instead with the module located in your external package for example <code class="docutils literal notranslate"><span class="pre">your_package/sets.py</span></code>, in which you now only have to <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">pylevel</span></code> to access the datasets <code class="docutils literal notranslate"><span class="pre">LevelSet</span></code> type and define the following structure.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="c1"># your_package/sets.py</span>
+
+<span class="kn">import</span> <span class="nn">pylevel</span>
+
+
+<span class="c1">## Example implementation of level set type declaration</span>
+<span class="k">class</span> <span class="nc">LevelSet</span><span class="p">(</span><span class="n">pylevel</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">LevelSet</span><span class="p">,</span> <span class="n">enum</span><span class="o">.</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">YourLevelSetName</span> <span class="o">=</span> <span class="mi">1</span>
+
+
+<span class="c1">## Note that here the LevelSet name and the *.mat file name do not need to coincide.</span>
+<span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">path</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">path</span><span class="p">[</span><span class="n">LevelSet</span><span class="o">.</span><span class="n">YourLevelSetName</span><span class="p">]</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s2">&quot;/../resources/YourLevelSetName.mat&quot;</span>
+
+<span class="n">string2levelset</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">string2levelset</span><span class="p">[</span><span class="s2">&quot;your_config_string_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">LevelSet</span><span class="o">.</span><span class="n">YourLevelSetName</span>
+</pre></div>
+</td></tr></table></div>
+<p>In a example script <code class="docutils literal notranslate"><span class="pre">example.py</span></code> using your package this would look something like this</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="c1"># example.py</span>
+
+<span class="kn">import</span> <span class="nn">pylevel</span>
+
+
+<span class="kn">from</span> <span class="nn">your_package.sets</span> <span class="kn">import</span> <span class="n">path</span>
+<span class="kn">from</span> <span class="nn">your_package.sets</span> <span class="kn">import</span> <span class="n">LevelSet</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">level_set_type</span> <span class="o">=</span> <span class="n">LevelSet</span><span class="o">.</span><span class="n">YourLevelSetName</span>
+
+    <span class="n">wrapper</span> <span class="o">=</span> <span class="n">pylevel</span><span class="o">.</span><span class="n">wrapper</span><span class="o">.</span><span class="n">LevelSetWrapper</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="s2">&quot;ExampleLevelSet&quot;</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">[</span><span class="n">level_set_type</span><span class="p">])</span>
+</pre></div>
+</td></tr></table></div>
+<p>Note: Here the <cite>string2levelset</cite> allows to potentially fetch string arguments from <code class="docutils literal notranslate"><span class="pre">*.yaml</span></code> or <code class="docutils literal notranslate"><span class="pre">*.json</span></code> configurations (as usually used in ROS packages) and the <code class="docutils literal notranslate"><span class="pre">LevelSetExample</span></code> allows to programatically use specific level set wrappers with support of <code class="docutils literal notranslate"><span class="pre">IntelliSense</span></code>.</p>
 </div>
 <div class="section" id="import-and-export-for-improved-initialisation">
 <h2>Import and Export for improved initialisation<a class="headerlink" href="#import-and-export-for-improved-initialisation" title="Permalink to this headline">¶</a></h2>
-<p>In order to accelerate the initialisation the export feature can be utilised to avoid the building process of the reachable set dictionaries.</p>
+<p>In order to accelerate the initialisation the export feature can be utilised to avoid the building process of the reachable set dictionaries on repeated script executions.</p>
 <div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -214,7 +288,13 @@
 44
 45
 46
-47</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+47
+48
+49
+50</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="c1"># scripts/export.py</span>
+
 <span class="sd">&quot;&quot;&quot; Example for level set wrapper usage.</span>
 
 <span class="sd">    Author: Philipp Rothenhäusler, Stockholm 2020</span>
@@ -273,6 +353,8 @@
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="matlab.html" class="btn btn-neutral float-right" title="MATLAB Set Generation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="pylevel.html" class="btn btn-neutral float-left" title="pylevel package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -1,28 +1,75 @@
 Examples
 ===============
 
-Creating new enumeration identifiers
+Creating new level set types
 -------------------------------------
 
-To be documented
+In order to access the level set wrapper from an external project it is recommended to define a ``enum.IntEnum`` to path ``string`` structured module such as the ``pylevel.datasets`` module.
+But instead with the module located in your external package for example ``your_package/sets.py``, in which you now only have to ``import pylevel`` to access the datasets ``LevelSet`` type and define the following structure.
+
+.. code-block:: python
+    :linenos:
+
+    #!/usr/bin/env python
+
+    # your_package/sets.py
+
+    import pylevel
 
 
-Levelset access
--------------------------------------
+    ## Example implementation of level set type declaration
+    class LevelSet(pylevel.datasets.LevelSet, enum.IntEnum):
+        YourLevelSetName = 1
 
-To be documented
+
+    ## Note that here the LevelSet name and the *.mat file name do not need to coincide.
+    cwd = os.path.dirname(os.path.abspath(__file__))
+    path = dict()
+    path[LevelSet.YourLevelSetName] = cwd + "/../resources/YourLevelSetName.mat"
+
+    string2levelset = dict()
+    string2levelset["your_config_string_name"] = LevelSet.YourLevelSetName
+
+In a example script ``example.py`` using your package this would look something like this
+
+.. code-block:: python
+    :linenos:
+
+    #!/usr/bin/env python
+
+    # example.py
+
+    import pylevel
+
+
+    from your_package.sets import path
+    from your_package.sets import LevelSet
+
+
+    if __name__ == "__main__":
+        level_set_type = LevelSet.YourLevelSetName
+
+        wrapper = pylevel.wrapper.LevelSetWrapper(
+                label="ExampleLevelSet",
+                path=path[level_set_type])
+
+Note: Here the `string2levelset` allows to potentially fetch string arguments from ``*.yaml`` or ``*.json`` configurations (as usually used in ROS packages) and the ``LevelSetExample`` allows to programatically use specific level set wrappers with support of ``IntelliSense``.
 
 
 Import and Export for improved initialisation
 ----------------------------------------------
 
-In order to accelerate the initialisation the export feature can be utilised to avoid the building process of the reachable set dictionaries.
+In order to accelerate the initialisation the export feature can be utilised to avoid the building process of the reachable set dictionaries on repeated script executions.
+
 
 .. code-block:: python
     :linenos:
 
 
     #!/usr/bin/env python
+
+    # scripts/export.py
+
     """ Example for level set wrapper usage.
 
         Author: Philipp Rothenhäusler, Stockholm 2020
