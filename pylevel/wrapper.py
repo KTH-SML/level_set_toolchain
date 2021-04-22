@@ -136,14 +136,17 @@ class ReachableSetWrapper:
             reachable_set = pylevel.data.ReachableSetData(
                     grid=grid,
                     data=self.value_function[:, :, :, :, t_idx])
-            indices = reachable_set.sublevel_set(level=0.0)
-            for index in indices:
-                grid_indices[index] = True
+            indices = reachable_set.sublevel_indices(level=0.0)
 
-            # Collect states from grid indices and conveniently create dict
+            ## TODO: Remove duplicate list iteration
+            #for index in indices:
+            #    grid_indices[index] = True
+
+            ## Collect states from grid indices and conveniently create dict
             states = list()
             value_function_dict = dict()
-            for index in grid_indices:
+            for index in indices:
+                grid_indices[index] = True
                 state = grid.state(index)
                 states.append(state)
                 value_function_dict[tuple(state)] = reachable_set.value_function(state)
@@ -174,7 +177,7 @@ class ReachableSetWrapper:
             self.sets[t_idx] = level_set_dict
         self.debug('All sets initialised.')
 
-    def _get_reachable_set_at_time(self,
+    def reach_at_t(self,
             t : float,
             convexified=False):
         """ Return level set set at time t or closest discretised index. """
@@ -185,7 +188,7 @@ class ReachableSetWrapper:
 
         return self.sets[int(numpy.asscalar(t_idx))][state_key]
 
-    def _get_minimal_ttr_set(self,
+    def reach_at_ttr(self,
             state : numpy.ndarray,
             convexified : bool=False):
         """ Return minimial time to reach set and its discretised time. """
@@ -203,14 +206,4 @@ class ReachableSetWrapper:
 
         self.debug('Failed to find index in any set: Unreachable')
         raise pylevel.error.StateNotReachableError()
-
-    @property
-    def reach_at_t(self):
-        """ Return reachable set for state. """
-        return self._get_reachable_set_at_time
-
-    @property
-    def reach_at_min_ttr(self):
-        """ Return minimum reachable set for state. """
-        return self._get_minimal_ttr_set
 

@@ -186,8 +186,8 @@ with some additional convenience features added in.</p>
 
 <dl class="py method">
 <dt id="pylevel.data.Grid.index">
-<em class="property">property </em><code class="sig-name descname">index</code><a class="headerlink" href="#pylevel.data.Grid.index" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return index from state input.</p>
+<code class="sig-name descname">index</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#pylevel.data.Grid.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return grid index of state rounded to next grid index.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -198,8 +198,8 @@ with some additional convenience features added in.</p>
 
 <dl class="py method">
 <dt id="pylevel.data.Grid.state">
-<em class="property">property </em><code class="sig-name descname">state</code><a class="headerlink" href="#pylevel.data.Grid.state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convenience access for external access of grid methods.</p>
+<code class="sig-name descname">state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span><span class="p">:</span> <span class="n">tuple</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#pylevel.data.Grid.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return state of grid index.</p>
 </dd></dl>
 
 </dd></dl>
@@ -237,21 +237,41 @@ with some additional convenience features added in.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="pylevel.data.ReachableSetData.sublevel_set">
-<em class="property">property </em><code class="sig-name descname">sublevel_set</code><a class="headerlink" href="#pylevel.data.ReachableSetData.sublevel_set" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read-only return of sub level function.</p>
+<dt id="pylevel.data.ReachableSetData.sublevel">
+<code class="sig-name descname">sublevel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">level</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>numpy.ndarray<span class="p">]</span><a class="headerlink" href="#pylevel.data.ReachableSetData.sublevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return states of sublevel of level set.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="pylevel.data.ReachableSetData.superlevel_set">
-<em class="property">property </em><code class="sig-name descname">superlevel_set</code><a class="headerlink" href="#pylevel.data.ReachableSetData.superlevel_set" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read-only return of super level function.</p>
+<dt id="pylevel.data.ReachableSetData.sublevel_indices">
+<code class="sig-name descname">sublevel_indices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">level</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>tuple<span class="p">]</span><a class="headerlink" href="#pylevel.data.ReachableSetData.sublevel_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return sublevel set incl. boundary</p>
+<dl class="simple">
+<dt>Note:</dt><dd><p>non-strict sublevel set</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.data.ReachableSetData.superlevel">
+<code class="sig-name descname">superlevel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">level</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>numpy.ndarray<span class="p">]</span><a class="headerlink" href="#pylevel.data.ReachableSetData.superlevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return states of superlevel of level set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pylevel.data.ReachableSetData.superlevel_indices">
+<code class="sig-name descname">superlevel_indices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">level</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>tuple<span class="p">]</span><a class="headerlink" href="#pylevel.data.ReachableSetData.superlevel_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return superlevel set incl. boundary</p>
+<dl class="simple">
+<dt>Note:</dt><dd><p>non-strict superlevel set</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="pylevel.data.ReachableSetData.value_function">
-<em class="property">property </em><code class="sig-name descname">value_function</code><a class="headerlink" href="#pylevel.data.ReachableSetData.value_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read-only return of value function.</p>
+<code class="sig-name descname">value_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="headerlink" href="#pylevel.data.ReachableSetData.value_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return value function for closest grid index.</p>
 </dd></dl>
 
 </dd></dl>
@@ -392,15 +412,15 @@ ReachableSetData entry is added to the <cite>sets</cite> attribute.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="pylevel.wrapper.ReachableSetWrapper.reach_at_min_ttr">
-<em class="property">property </em><code class="sig-name descname">reach_at_min_ttr</code><a class="headerlink" href="#pylevel.wrapper.ReachableSetWrapper.reach_at_min_ttr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return minimum reachable set for state.</p>
+<dt id="pylevel.wrapper.ReachableSetWrapper.reach_at_t">
+<code class="sig-name descname">reach_at_t</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">convexified</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.wrapper.ReachableSetWrapper.reach_at_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return level set set at time t or closest discretised index.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="pylevel.wrapper.ReachableSetWrapper.reach_at_t">
-<em class="property">property </em><code class="sig-name descname">reach_at_t</code><a class="headerlink" href="#pylevel.wrapper.ReachableSetWrapper.reach_at_t" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return reachable set for state.</p>
+<dt id="pylevel.wrapper.ReachableSetWrapper.reach_at_ttr">
+<code class="sig-name descname">reach_at_ttr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">state</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">convexified</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pylevel.wrapper.ReachableSetWrapper.reach_at_ttr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return minimial time to reach set and its discretised time.</p>
 </dd></dl>
 
 </dd></dl>

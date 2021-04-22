@@ -114,28 +114,16 @@ class Grid:
             print("LevelSetWrapper: ", *args)
 
 
-    def _get_index_of_rounded_state(self, x : numpy.ndarray) -> tuple:
+    def index(self, x : numpy.ndarray) -> tuple:
         """ Return grid index of state rounded to next grid index. """
 
         return tuple(((x - self.x_min) / self.dx).astype(int).flatten())
 
-    def _get_state_of_index(self, index : tuple) -> numpy.ndarray:
+    def state(self, index : tuple) -> numpy.ndarray:
         """ Return state of grid index. """
         state = numpy.array(index) * self.dx + self.x_min
 
         return numpy.array(state)
-
-    @property
-    def index(self):
-        """ Return index from state input.  """
-
-        return self._get_index_of_rounded_state
-
-    @property
-    def state(self):
-        """ Convenience access for external access of grid methods.  """
-
-        return self._get_state_of_index
 
 
 @attr.s
@@ -230,7 +218,7 @@ class ReachableSetData:
         ## TODO: Check if returning numpy value
         return interpn(points, self.data, x, method=method)[0]
 
-    def _get_sublevel_set_indices(self, level=0.0) -> typing.List[tuple]:
+    def sublevel_indices(self, level=0.0) -> typing.List[tuple]:
         """ Return sublevel set incl. boundary
 
             Note:
@@ -244,7 +232,7 @@ class ReachableSetData:
             indices.append(tuple(curr_index))
         return indices
 
-    def _get_superlevel_set_indices(self, level=0.0) -> typing.List[tuple]:
+    def superlevel_indices(self, level=0.0) -> typing.List[tuple]:
         """ Return superlevel set incl. boundary
 
             Note:
@@ -258,7 +246,30 @@ class ReachableSetData:
             indices.append(tuple(curr_index))
         return indices
 
-    def _get_value_function_of_rounded_state(self,
+    def _get_states_from_indices(self, indices : typing.List[int]) \
+            -> typing.List[numpy.ndarray]:
+        """ Return list of states for list of indices. """
+        states = list()
+        grid = self.grid
+        for index in indices:
+            grid_indices[index] = True
+            state = grid.state(index)
+            states.append(state)
+        return states
+
+    def superlevel(iself, level=0.0) -> typing.List[numpy.ndarray]:
+        """ Return states of superlevel of level set. """
+        indices_list = self.superlevel_indices(level)
+        states_list = self._get_states_from_indices(indices_list)
+        return states_list
+
+    def sublevel(self, level=0.0) -> typing.List[numpy.ndarray]:
+        """ Return states of sublevel of level set. """
+        indices_list = self.sublevel_indices(level)
+        states_list = self._get_states_from_indices(indices_list)
+        return states_list
+
+    def value_function(self,
             x : numpy.ndarray) -> numpy.ndarray:
         """ Return value function for closest grid index. """
         index = self.grid.index(x)
@@ -269,18 +280,3 @@ class ReachableSetData:
             self.grid.debug('Failed to find value function for state due to: ', e)
             self.grid.print_config(x)
             raise pylevel.error.StateLookupError()
-
-    @property
-    def sublevel_set(self):
-        """ Read-only return of sub level function. """
-        return self._get_sublevel_set_indices
-
-    @property
-    def superlevel_set(self):
-        """ Read-only return of super level function. """
-        return self._get_superlevel_set_indices
-
-    @property
-    def value_function(self):
-        """ Read-only return of value function. """
-        return self._get_value_function_of_rounded_state
