@@ -141,7 +141,15 @@ end
 
 HJIextraArgs.quiet = true;
 
+if isfield(params, 'label')
+    fprintf('Generate reachable data for %s: \n', params.label);
+end
 [data, tau2, ~] = ...
   HJIPDE_solve(data0, tau, schemeData, mode, HJIextraArgs);
+if isfield(params, 'label')
+    % Update figure title
+    set(gcf,'Name', params.label);
+end
+
 end
 

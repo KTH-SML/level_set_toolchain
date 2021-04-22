@@ -1,7 +1,9 @@
 % Example script for computing RS for factory example
 clear
 
+%% Grouping directory of generated state sets
 label = "drone";
+
 %% General Parameters
 save_path = mfilename('fullpath') + "../../resources/generated/" + label;
 
@@ -90,6 +92,7 @@ params.T = 5.0; % seconds
 params.target = shapeCylinder(params.g, [2, 4], [0; 0; 0; 0], 0.1);
 params.is_reach_colors = true;
 params.isTube = true;
+params.label = 'FRS';
 params.videoFilename = [save_path 'reach_BRS'];
 [~, FRS_data, FRS_time] = quad_RS(params);
 
@@ -109,6 +112,7 @@ params.is_avoid = true;
 params.is_boundary_avoid = true;
 params.is_avoid_colors = true;
 params.isTube = true;
+params.label = 'always_inspection_zone_a_BRS';
 params.videoFilename = [save_path 'always_inspection_zone_a_BRS'];
 [~, alw_inspect_zone_a_data, alw_inspect_zone_a_time] = quad_RS(params);
 % define complement as the RCIS
@@ -119,12 +123,13 @@ params = default_params;
 params.figNum = 2;
 params.isBackwards = true; % BRS
 params.g = inspect_zone_a_g;
-params.T = 8; % seconds
+params.T = 5; % seconds
 params.target = shapeCylinder(params.g, [2, 4], [1.1; 0; 0.5; 0], 0.1);
 params.obstacle = min(-rcis_inspect_zone_a, shelves_inspect_a);
 params.is_reach_colors = true;
 params.isTube = false;
-params.videoFilename = [save_path 'eventually_inspection_goal_a_BRS'];
+params.label = 'eventually_inspection_goal_a_BRS';
+params.videoFilename = [save_path params.label];
 [~, ev_inspect_goal_a_data, ev_inspect_goal_a_time] = quad_RS(params);
 
 % Compute reach RCIS of inspection zone
@@ -138,6 +143,7 @@ params.target = rcis_inspect_zone_a_global;
 params.obstacle = shelves_global;
 params.is_reach_colors = true;
 params.isTube = false;
+params.label = 'eventually_rcis_inspection_a_BRS';
 params.videoFilename = [save_path 'eventually_rcis_inspection_a_BRS'];
 [~, ev_rcis_inspect_zone_a_data, ev_rcis_inspect_zone_a_time] = quad_RS(params);
 
@@ -157,6 +163,7 @@ params.is_avoid = true;
 params.is_boundary_avoid = true;
 params.is_avoid_colors = true;
 params.isTube = true;
+params.label = 'eventually_inspection_goal_a_BRS';
 params.videoFilename = [save_path 'always_inspection_zone_b_BRS'];
 [~, alw_inspect_zone_b_data, alw_inspect_zone_b_time] = quad_RS(params);
 % define complement as the RCIS
@@ -172,6 +179,7 @@ params.target = shapeCylinder(params.g, [2, 4], [1.1; 0; -0.5; 0], 0.1);
 params.obstacle = min(-rcis_inspect_zone_b, shelves_inspect_b);
 params.is_reach_colors = true;
 params.isTube = false;
+params.label = 'eventually_inspection_goal_a_BRS';
 params.videoFilename = [save_path 'eventually_inspection_goal_b_BRS'];
 [~, ev_inspect_goal_b_data, ev_inspect_goal_b_time] = quad_RS(params);
 
@@ -186,6 +194,7 @@ params.target = rcis_inspect_zone_b_global;
 params.obstacle = shelves_global;
 params.is_reach_colors = true;
 params.isTube = false;
+params.label = 'eventually_rcis_inspection_b_BRS';
 params.videoFilename = [save_path 'eventually_rcis_inspection_b_BRS'];
 [~, ev_rcis_inspect_zone_b_data, ev_rcis_inspect_zone_b_time] = quad_RS(params);
 
@@ -201,8 +210,11 @@ params.T = 2;
 params.target = shelves_inspect_a;
 params.is_avoid_colors = true;
 params.isTube = true;
+params.label = 'always_no_shelf_inspect_zone_a_BRS';
 params.videoFilename = [save_path 'always_no_shelf_inspect_zone_a_BRS'];
 [~, alw_no_shelf_inspect_zone_a_data, alw_no_shelf_inspect_zone_a_time] = quad_RS(params);
+
+% Compute avoid shelf in inspect zone A grid
 params = default_params;
 params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
 params.figNum = 4;
@@ -213,8 +225,11 @@ params.T = 2;
 params.target = shelves_inspect_b;
 params.is_avoid_colors = true;
 params.isTube = true;
+params.label = 'always_no_shelf_inspect_zone_b_BRS';
 params.videoFilename = [save_path 'always_no_shelf_inspect_zone_b_BRS'];
 [~, alw_no_shelf_inspect_zone_b_data, alw_no_shelf_inspect_zone_b_time] = quad_RS(params);
+
+% Compute avoid shelf in inspect zone A grid
 params = default_params;
 params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
 params.figNum = 4;
@@ -225,6 +240,7 @@ params.T = 2;
 params.target = shelves_global;
 params.is_avoid_colors = true;
 params.isTube = true;
+params.label = 'always_no_shelf_global_BRS';
 params.videoFilename = [save_path 'always_no_shelf_global_BRS'];
 [~, alw_no_shelf_global_data, alw_no_shelf_global_time] = quad_RS(params);
 
