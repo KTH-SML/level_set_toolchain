@@ -207,3 +207,7 @@ class ReachableSetWrapper:
         """ Return if state is member with level set agnostic membership. """
         return state in self.states
 
+    def is_not_member(self, state: numpy.ndarray):
+        """ Return if state is member with level set agnostic membership. """
+        return not state in self.states
+
