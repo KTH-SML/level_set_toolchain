@@ -129,7 +129,7 @@ class ReachableSetWrapper:
         self.sets = dict()
         grid = self.grid
         for t_idx,_ in enumerate(self.time):
-            self.debug('Initialising set:', t_idx)
+            self.debug('Initialising set {} of {}'.format(t_idx, len(self.time)))
             level_set_dict = dict()
             grid_indices = dict()
 
