@@ -10,7 +10,7 @@ default_params.uMax = 1;
 default_params.dMax = [0.0, 0.0, 0.0, 0.0]; % disturbance to \dot[x, v_x, y, v_y]
 dWorstCase = 0.75; % worst-case disturbance
 
-default_params.makeVideo = true;
+default_params.makeVideo = false;
 
 % Desired resolution of grid [x, v_x, y, v_y]
 global_resolution = [0.05 0.05 0.05 0.05];
