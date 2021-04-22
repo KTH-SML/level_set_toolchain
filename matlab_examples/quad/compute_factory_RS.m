@@ -2,11 +2,12 @@
 clear
 
 %% Grouping directory of generated state sets
-label = "drone";
+label = 'drone';
+path = fileparts(mfilename('fullpath'));
+save_path = [path  '/../../resources/generated/' label];
+fprintf("Storing reachable data under %s", save_path);
 
-%% General Parameters
-save_path = mfilename('fullpath') + "../../resources/generated/" + label;
-
+%% General Parameters 
 default_params.uMin = -1; % Acceleration limits
 default_params.uMax = 1;
 % by default consider zero disturbance, but in avoid situations consider
@@ -88,13 +89,16 @@ params.isBackwards = false; % FRT
 params.g = global_g;
 
 params.figNum = 1;
-params.T = 5.0; % seconds
+params.T = 7.0; % seconds
 params.target = shapeCylinder(params.g, [2, 4], [0; 0; 0; 0], 0.1);
 params.is_reach_colors = true;
 params.isTube = true;
 params.label = 'FRS';
 params.videoFilename = [save_path 'reach_BRS'];
 [~, FRS_data, FRS_time] = quad_RS(params);
+
+g = global_g;
+data_save_path = [save_path 'FRS'];
 
 %% Backward Reachable Tubes Inspect A
 % Compute backward reach tubes for TLT corresponding to LTL statement:
@@ -217,7 +221,7 @@ params.videoFilename = [save_path 'always_no_shelf_inspect_zone_a_BRS'];
 % Compute avoid shelf in inspect zone A grid
 params = default_params;
 params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
-params.figNum = 4;
+params.figNum = 5;
 params.isBackwards = true; % BRS
 params.is_avoid = true;
 params.g = inspect_zone_b_g;
@@ -232,7 +236,7 @@ params.videoFilename = [save_path 'always_no_shelf_inspect_zone_b_BRS'];
 % Compute avoid shelf in inspect zone A grid
 params = default_params;
 params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
-params.figNum = 4;
+params.figNum = 6;
 params.isBackwards = true; % BRS
 params.is_avoid = true;
 params.g = global_g;
