@@ -82,9 +82,15 @@ class ReachableSetWrapper:
         # States
         self.states = dict()
         # Time as list from 0 to tf
-        self.time = data['BRS_time'].tolist()[0]
+        try:
+            self.time = data['BRS_time'].tolist()[0]
+        except:
+            self.time = data['FRS_time'].tolist()[0]
         # Value function with dx1, dx2, ..., dxn, t
-        self.value_function = data['BRS_data']
+        try:
+            self.value_function = data['BRS_data']
+        except:
+            self.value_function = data['FRS_data']
         # Helper to access grid indices or states and their discretisation
         self.grid = pylevel.data.Grid(
                 grid=self.grid,
