@@ -1,8 +1,10 @@
 % Example script for computing RS for factory example
 clear
 
+label = "drone";
 %% General Parameters
-save_path = '/home/fjiang/Projects/MATLAB/Experiments/SML_level_set/resources/quad/factory/';
+save_path = mfilename('fullpath') + "../../resources/generated/" + label;
+
 default_params.uMin = -1; % Acceleration limits
 default_params.uMax = 1;
 % by default consider zero disturbance, but in avoid situations consider
@@ -13,8 +15,8 @@ dWorstCase = 0.75; % worst-case disturbance
 default_params.makeVideo = false;
 
 % Desired resolution of grid [x, v_x, y, v_y]
-global_resolution = [0.05 0.05 0.05 0.05];
-zone_resolution = [0.025 0.05 0.025 0.05];
+global_resolution = [0.1 0.1 0.1 0.1];
+zone_resolution = [0.05 0.05 0.05 0.05];
 % Note, these resolutions should be smaller than the target region
 
 % Define factory global grid
