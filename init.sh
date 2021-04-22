@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-"""
-    Setup script to configure environment.
-
-    Note: Update the USER_SHELL according to your preference. {.bashrc, .zshrc, .profile}
-
-    Author: Philipp Rothenhäusler, Stockholm 2021
-"""
+#
+#    Setup script to configure environment.
+#
+#    Note: Update the USER_SHELL according to your preference. {.bashrc, .zshrc, .profile}
+#
+#    Author: Philipp Rothenhäusler, Stockholm 2021
 
 USER_SHELL=".zshrc"
 TBA=()
