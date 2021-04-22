@@ -8,6 +8,7 @@ Then, you save the solutions in MATLAB and can use the Python interface wrapper 
 - [Setup](#setup)
 - [MATLAB Toolbox documentation](https://www.cs.ubc.ca/~mitchell/ToolboxLS/toolboxLS-1.1.pdf).
 - [Python example scripts](./scripts)
+- [Python API](https://kth-sml.github.io/level_set_toolchain/) (And extended usage documentation)
 
 ## Setup
 This repository consists of both a Python package and a MATLAB example script.
@@ -39,65 +40,26 @@ These examples have presets just to be illustrative, go ahead and change them
 to match the requirements of your project.
 
 ### Python - Using level sets
-In order to globally install the Python package referencing the local `resources` directory execute the following in the root directory of this repository
+Install the dependencies with
 ```bash
-pip install -e .
+pip install -r requirements.txt
+```
+andr install using the `setup.py` with
+```bash
+python setup.py install
 ```
 
-The package `pylevel` is composed of a wrapper, which provides convenience methods such as
-- `is_member`: to check if a state is in any of the level sets
-- `get_reachable_set`: Returns the minimal time to reach level set (Rounds state to next grid state)
-- `get_reachable_set_at_time`: Returns the level set at specified or closest discretised time index
+_Note: If you are a developer and you plan to iterate code changes, use `./init.sh` in the root of the repository to expose the source code as a package to the PYTHONPATH.
+This allows you to use latest code changes without repeated installation through `setup.py`._
+
+**Documentation of the Python API**:
+
+The API documentation of the Python wrapper can be found [here](https://kth-sml.github.io/level_set_toolchain/).
 
 _Note: For all set retrieval methods it is possible to specify the `convexified=True` argument to receive only the vertices of the level sets convex hull for convenient visualisation of the corresponding sets._
 
-You can find some basic examples of how to use the `pylevel` package under `./scripts`.
+You can find some basic examples of how to use the `pylevel` package under `./scripts`. This includes access of reachable sets at a specified time or for example the usage of the import and export feature avoiding repeated initialisation.
 
-
-### Python - Define custom level sets
-In order to access the level set wrapper from an external project it is recommended to define a `enum.IntEnum` to path `string` structured module such as the `pylevel.datasets` module.
-But instead with the module located in your external package for example `your_package/sets.py`, in which you now only have to `import pylevel` to access the datasets `LevelSet` type and define the following structure.
-
-```python
-import pylevel
-
-
-## Example implementation of level set type declaration
-class LevelSet(pylevel.datasets.LevelSet, enum.IntEnum):
-    YourLevelSetName = 1
-
-
-## Note that here the LevelSet name and the *.mat file name do not need to coincide.
-cwd = os.path.dirname(os.path.abspath(__file__))
-path = dict()
-path[LevelSet.YourLevelSetName] = cwd + "/../resources/YourLevelSetName.mat"
-
-string2levelset = dict()
-string2levelset["your_config_string_name"] = LevelSet.YourLevelSetName
-```
-
-In your package this would look something like this
-
-```python
-import pylevel
-
-
-from your_package.sets import path
-from your_package.sets import LevelSet
-
-
-if __name__ == "__main__":
-    level_set_type = LevelSet.YourLevelSetName
-
-    wrapper = pylevel.wrapper.LevelSetWrapper(
-            label="ExampleLevelSet",
-            path=path[level_set_type])
-```
-
-_Note: Here the `string2levelset` allows to potentially fetch string arguments from `*.yaml` or `*.json` configurations (as usually used in ROS packages) and the `LevelSetExample` allows to programatically use specific level set wrappers with support of `IntelliSense`._
-
-For usage examples of the Python wrapper see the scripts directory
-- [Levelsets at time](scripts/timed_level_sets.py)
 
 
 ## Contribution

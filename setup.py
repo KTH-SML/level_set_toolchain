@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pylevel",
-    version="0.0.8",
+    version="1.0.0",
     author="Frank Jiang, Philipp Rothenhäusler",
     author_email="fjiang@kth.se, philipp.rothenhaeusler@gmail.com",
     description="Python package for MATLAB based Levelset toolbox.",
