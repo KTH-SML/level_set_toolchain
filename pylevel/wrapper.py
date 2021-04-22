@@ -74,10 +74,6 @@ class ReachableSetWrapper:
         ## If no previous data is provided initialise first
         self._initialise_from_raw_data()
 
-    def is_member(self, state: numpy.ndarray):
-        """ Return if state is member with level set agnostic membership. """
-        return state in self.states
-
     def _initialise_from_raw_data(self):
         ## Initialise loader (without storing raw data reference)
         data = loadmat(self.path)
@@ -206,4 +202,8 @@ class ReachableSetWrapper:
 
         self.debug('Failed to find index in any set: Unreachable')
         raise pylevel.error.StateNotReachableError()
+
+    def is_member(self, state: numpy.ndarray):
+        """ Return if state is member with level set agnostic membership. """
+        return state in self.states
 

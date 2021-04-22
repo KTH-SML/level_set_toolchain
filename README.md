@@ -40,11 +40,11 @@ These examples have presets just to be illustrative, go ahead and change them
 to match the requirements of your project.
 
 ### Python - Using level sets
-Install the dependencies with
+Fetch necessary dependencies with
 ```bash
 pip install -r requirements.txt
 ```
-andr install using the `setup.py` with
+and install the package using the `setup.py` with
 ```bash
 python setup.py install
 ```
