@@ -6,6 +6,7 @@
 """
 import os
 import attr
+import time
 import numpy
 import typing
 import pickle
@@ -64,33 +65,47 @@ class ReachableSetWrapper:
     states = attr.ib(default=None, type=typing.Optional[dict])
 
     show_config = attr.ib(default=False, type=bool)
+    ## Export if load_from memory is not provided or fails
+    initialise_once = attr.ib(default=True, type=bool)
     debug_is_enabled = attr.ib(default=False, type=bool)
 
     def __attrs_post_init__(self):
-        if self.from_memory is not None:
-            self._load_from_memory()
-            return
+        if self.from_memory is None:
+            self.from_memory = os.getcwd()
 
+        ## Attempt to load from memory
+        if self.initialise_once:
+            try:
+                self._load_from_memory()
+                return
+            except Exception as e:
+                self.debug("Initialise from memory failed: {}".format(e))
+                raise RuntimeError()
         ## If no previous data is provided initialise first
         self._initialise_from_raw_data()
+        self.export()
 
     def _initialise_from_raw_data(self):
+        self.debug("Initialise from: {}".format(self.path))
         ## Initialise loader (without storing raw data reference)
         data = loadmat(self.path)
         # Grid with ds dimensional array and Nx1, Nx2, Nx3, Nxn entries
         self.grid = data['g']
         # States
         self.states = dict()
+
+        kt = None
+        for key in data.keys():
+            if 'time' in key.split("_"):
+                kt = key
+            elif 'data' in key.split("_"):
+                kd = key
+
         # Time as list from 0 to tf
-        try:
-            self.time = data['BRS_time'].tolist()[0]
-        except:
-            self.time = data['FRS_time'].tolist()[0]
+        self.time = data[kt].tolist()[0]
         # Value function with dx1, dx2, ..., dxn, t
-        try:
-            self.value_function = data['BRS_data']
-        except:
-            self.value_function = data['FRS_data']
+        self.value_function = data[kd]
+
         # Helper to access grid indices or states and their discretisation
         self.grid = pylevel.data.Grid(
                 grid=self.grid,
@@ -103,7 +118,10 @@ class ReachableSetWrapper:
         path = self.from_memory
         identifier = self.label + ".levelset"
         filepath = '/'.join([path, identifier])
-        print('Import from filepath:', filepath)
+        file_size = os.path.getsize(filepath)
+        print('Size: ', file_size)
+
+        self.debug('Import from filepath:', filepath)
         with open(filepath, "rb") as f:
             data_loaded = pickle.load(f)
         self.__dict__.update(**data_loaded)
@@ -118,9 +136,12 @@ class ReachableSetWrapper:
         path = os.getcwd() if path is None else path
         identifier = self.label + ".levelset"
         filepath = '/'.join([path,identifier])
-        print('Export to filepath:', filepath)
+
+        self.debug('Export to filepath:', filepath)
+
         with open(filepath, "wb") as f:
             pickle.dump(self.__dict__, f)
+
         self.debug("Exported levelset: {} with identifier: {}".format(
             self.label, identifier))
 
@@ -128,7 +149,8 @@ class ReachableSetWrapper:
         """ Iterate over discretised time and initialise corresponding ttr. """
         self.sets = dict()
         grid = self.grid
-        for t_idx,_ in enumerate(self.time):
+        for t_idx, _ in enumerate(self.time):
+            stamp = time.time()
             self.debug('Initialising set {} of {}'.format(t_idx, len(self.time)))
             level_set_dict = dict()
             grid_indices = dict()
@@ -139,10 +161,6 @@ class ReachableSetWrapper:
                     grid=grid,
                     data=self.value_function[:, :, :, :, t_idx])
             indices = reachable_set.sublevel_indices(level=0.0)
-
-            ## TODO: Remove duplicate list iteration
-            #for index in indices:
-            #    grid_indices[index] = True
 
             ## Collect states from grid indices and conveniently create dict
             states = list()
@@ -158,8 +176,10 @@ class ReachableSetWrapper:
 
             for state in states:
                 ## Create tuple
-                t = tuple(state.flatten().tolist())
+                t = tuple(state)
                 self.states[t] = None
+
+            states = numpy.array(states)
 
             ## Dict with indice key and boolean to define membership
             level_set_dict['grid_indices'] = grid_indices
@@ -177,6 +197,7 @@ class ReachableSetWrapper:
 
             ## Update global set dictionary
             self.sets[t_idx] = level_set_dict
+            self.debug('--> Initialised in {}s'.format(time.time() - stamp))
         self.debug('All sets initialised.')
 
     def reach_at_t(self,
