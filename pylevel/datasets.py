@@ -25,7 +25,14 @@ class LevelSetExample(LevelSet, enum.IntEnum):
     SVEA = 1
     Drone = 2
     DroneForesight = 3
+    BenchmarkLowResLowHoriz = 4
+    BenchmarkMediumResMediumHoriz = 5
+    BenchmarkHighResMediumHoriz = 6
 
+## See MATLAB generate_evaluation_sets.m for reference
+# Low res: 1s
+# Med res: 2s
+# High res: 5s
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 path = dict()
@@ -34,6 +41,13 @@ path[LevelSetExample.SVEA] = cwd + "/../resources/svea/TTR_and_grad.mat"
 path[LevelSetExample.Drone] = cwd + "/../resources/quad4D/low_res_BRS.mat"
 ## Long horizon example reachable set (exemplifying the curse of dimensionality)
 path[LevelSetExample.DroneForesight] = cwd + "/../resources/quad4D/BRS.mat"
+## Benchmark dataset with low resolution and low time horizon
+path[LevelSetExample.BenchmarkLowResLowHoriz] = cwd + "/../resources/eval/frs_low_resolution_low_horizon.mat"
+## Benchmark dataset with medium resolution and medium time horizon
+path[LevelSetExample.BenchmarkMediumResMediumHoriz] = cwd + "/../resources/eval/frs_medium_resolution_medium_horizon.mat"
+## Benchmark dataset with high resolution and med time horizon
+path[LevelSetExample.BenchmarkHighResMediumHoriz] = cwd + "/../resources/eval/frs_high_resolution_med_horizon.mat"
+
 
 string2levelset = dict()
 string2levelset["svea"] = LevelSetExample.SVEA
