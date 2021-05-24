@@ -7,11 +7,13 @@
     with some additional convenience features added in.
 
 """
-
 import attr
 import enum
+import h5py
 import numpy
 import typing
+import dask.array
+import hdf5storage
 from scipy.interpolate import interpn
 
 import pylevel
@@ -33,28 +35,32 @@ class InterpolationMethod(enum.IntEnum):
 @attr.s
 class Grid:
     """ Grid component for interfacing .mat level sets. """
-
+    ## HDF5 data handle for optimised access coordination
+    data_handle=attr.ib(type=str)
+    ## Filepath to hdf data
+    data_path=attr.ib(type=str)
     ## Discretisation grid
-    grid = attr.ib(type=numpy.array)
+    grid = attr.ib(default=None, type=typing.Optional[numpy.array])
     ## Dimension of state space
     dim = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
+    ## Grid discretisation step along each dimension
+    dx = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
     ## Minimum state value on grid start
     x_min = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
     ## Maximum state value on grid end
     x_max = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
-    ## Count of grid elements along each dimensio
+    ## Count of grid elements along each dimension
     N = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
+    ## Grid discretisation step along each dimension
+    N_data = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
     ## Boundary condition to specify behaviour
     boundary = attr.ib(default=None, type=typing.Optional[typing.List])
-    ## Grid discretisation step along each dimension
-    dx = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
     ## Convenience variable ds dimensional
-    ## TODO: To be documented -> maybe good to choose a more expressive name
     vs = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
     ## Enable debugging
     debug_is_enabled = attr.ib(default=False, type=bool)
     ## Show configuration
-    show_config = attr.ib(default=False, type=bool)
+    show_config = attr.ib(default=True, type=bool)
 
     ## LEGACY
     ## Unused - kept as reference: to be documented
@@ -67,32 +73,46 @@ class Grid:
     def __attrs_post_init__(self):
         """ Initialise from MATLAB *.mat file. """
         self.debug('Grid initialising')
-        g = self.grid[0][0]
+        self.debug('Received data handle: ', self.data_handle)
 
-        self.dim = g[0][0][0]
-        self.x_min = g[1].reshape((self.dim,))
-        self.x_max = g[2].reshape((self.dim,))
-        self.N = g[3].reshape((self.dim,))
-        self.boundary = g[4].reshape((self.dim,)).tolist()
-        self.dx = g[5].reshape((self.dim,))
-        self.vs = g[6].reshape((self.dim,))
+        self.debug('Initialising grid...')
+        self.grid = self.data_handle['/data/grid']
+        self.dim = self._initialise_field('dim').astype(int)
+        self.dx = self._initialise_field('dx')
+        self.x_min = self._initialise_field('min')
+        self.x_max = self._initialise_field('max')
+        self.N = self._initialise_field('N').astype(int)
+
+        self.N_data = numpy.prod(self.N)
+
+        ## TODO: Decide and time complexity that is bearable
+        # for single desktop workstation
+        if self.N_data > 20000:
+            print('WARNING: Complexity is very high ({})'.format(self.N_data))
+
+        ## Initialise using loadmat to parse MATLAB cell array
+        self.boundary = hdf5storage.read(path='/data/grid/bdry/', filename=self.data_path)
+
+        ## Initialise using loadmat to parse MATLAB cell array
+        self.vs = hdf5storage.read(path='/data/grid/vs/', filename=self.data_path)
 
         if self.show_config:
             self.print_config()
 
+    def _initialise_field(self, field_name):
+        """ Initialise dask array from hdf5 file. """
+        return numpy.squeeze(dask.array.from_array(self.grid[field_name], chunks=1).compute())
+
     def print_config(self, x : typing.Optional[numpy.ndarray] = None):
         """ Visualise configuration and current state index. """
-        if x is None:
-            if not is_in_grid(x):
-                print('State not in grid:')
-            else:
-                print('State in grid:')
-            print('--> State index: ', self.index(x))
 
         print('Grid configuration:')
-        print('Dimension:', self.dim)
         print('Grid (min | max): ({} | {})'.format(self.x_min, self.x_max))
-        print('Grid step size: ', self.dx)
+        print('Grid step size: ', self.dx[...])
+
+        print('Complexity:')
+        print('--> Dimension:', self.dim[...])
+        print('--> Datapoints: ', self.N_data[...])
 
     def _is_state_in_grid(self, x : numpy.ndarray) -> bool:
         """ Return true if state is in discretisation range. """
@@ -103,9 +123,8 @@ class Grid:
         else:
             return False
 
-    def _is_periodic_dim(self, dim: None) ->  bool:
+    def _is_dimension_periodic(self, dim: None) ->  bool:
         """ Docstring missing. """
-        ## TODO: Document dim type or format
         return "addGhostPeriodic" in self.boundary[dim][0][0][3][0][0][0][0]
 
     def debug(self, *args):
@@ -119,49 +138,62 @@ class Grid:
 
         return tuple(((x - self.x_min) / self.dx).astype(int).flatten())
 
-    def state(self, index : tuple) -> numpy.ndarray:
+    def state(self, index : numpy.ndarray) -> numpy.ndarray:
         """ Return state of grid index. """
-        state = numpy.array(index) * self.dx + self.x_min
-
-        return numpy.array(state)
+        return numpy.array(index * self.dx + self.x_min)
 
 
 @attr.s
 class ReachableSetData:
-    """ Collection of functions for reachable set at time discretisation.
+    """ Collection of functions for reachable sets.
 
-        Note:
-            Fundamental data placeholders are subclassed from Grid.
+        Reads HDF5 file without writing. Wrapper and higher level objects
+        will use read write for updating existing files.
 
     """
-    ## Grid interface of *.mat file provided data
+    ## Numerical grid interface of *.mat file provided data
     grid = attr.ib(type=Grid)
 
-    ## Value function dictionary with (key, value) as type (grid_index, value_function)
-    data = attr.ib(default=None, type=typing.Optional[numpy.array])
+    ## LEGACY HDF5: /data group
+    data_handle = attr.ib(type=typing.Optional[str])
+
+    ## Time index to slice value function
+    time_index = attr.ib(default=None)
+
+    ## Value function
+    value_function = attr.ib(default=None) # , type=typing.Optional[dask.array])
+
+    ## Gradient
+    # gradient = attr.ib(default=None, type=typing.Optional[dask.array])
 
     ## Select whether to verbosify prints
     debug_is_enabled = attr.ib(default=False, type=bool)
 
     def __attrs_post_init__(self):
-        self._augmentPeriodicData()
+        self._initialise_data_reference()
+        self._extend_periodic_dimensions()
 
-    def debug(self, *args):
-        """ Print debug messages if debugging is enabled. """
-        if self.debug_is_enabled:
-            print("ReachableSetData: ", *args)
+    def _initialise_data_reference(self):
+        ## Initialise value_function with states of time index 0
+        self.at_time(time_index=0)
 
-    def _augmentPeriodicData(self):
+    def _extend_periodic_dimensions(self):
         """ To be documented. (@Frank)
+
+            Appends data columnvector to periodic data to allow
+            differentiation.
 
             Note:
                 Ported from Mo Chens augmentPeriodicData.m in helporOC git repo.
                 Helps deal with periodic data axes.
         """
         g = self.grid
+        # t = numpy.squeeze(numpy.asarray(g.dim, dtype=int))
+        # print('Dim: ', t)
 
         for i in range(g.dim):
-            if g._is_periodic_dim(i): #clunky...
+            ## TODO: Update check on periodic dim
+            if g._is_dimension_periodic(i): #clunky...
                 ## TODO: Check if this has been run before and if
                 # tested remove exception
                 raise NotImplementedError()
@@ -177,10 +209,10 @@ class ReachableSetData:
                 aug_shape = list(self.data.shape)
                 aug_shape[i] = 1
                 aug_shape = tuple(aug_shape)
-                aug_dim_data = self.data[colons].reshape(aug_shape)
+                aug_dim_data = self.value_function[colons].reshape(aug_shape)
 
                 ## TODO: where is data used
-                self.data = numpy.concatenate(
+                self.value_function= numpy.concatenate(
                         (self.data, aug_dim_data),
                         axis = i)
 
@@ -218,37 +250,10 @@ class ReachableSetData:
         ## TODO: Check if returning numpy value
         return interpn(points, self.data, x, method=method)[0]
 
-    def sublevel_indices(self, level=0.0) -> typing.List[tuple]:
-        """ Return sublevel set incl. boundary
-
-            Note:
-                non-strict sublevel set
-
-        """
-        index_array = numpy.where(self.data <= level)
-        indices = []
-        for i in range(len(index_array[0])):
-            curr_index = [index_array[j][i] for j in range(len(index_array))]
-            indices.append(tuple(curr_index))
-        return indices
-
-    def superlevel_indices(self, level=0.0) -> typing.List[tuple]:
-        """ Return superlevel set incl. boundary
-
-            Note:
-                non-strict superlevel set
-
-        """
-        index_array = numpy.where(self.data >= level)
-        indices = []
-        for i in range(len(index_array[0])):
-            curr_index = [index_array[j][i] for j in len(index_array)]
-            indices.append(tuple(curr_index))
-        return indices
-
     def _get_states_from_indices(self, indices : typing.List[int]) \
             -> typing.List[numpy.ndarray]:
         """ Return list of states for list of indices. """
+        ## TODO: Return dask graph
         states = list()
         grid = self.grid
         for index in indices:
@@ -257,26 +262,40 @@ class ReachableSetData:
             states.append(state)
         return states
 
-    def superlevel(iself, level=0.0) -> typing.List[numpy.ndarray]:
-        """ Return states of superlevel of level set. """
-        indices_list = self.superlevel_indices(level)
-        states_list = self._get_states_from_indices(indices_list)
-        return states_list
+    def sublevel_mask(self, level : float = 0.0,
+            time_index : typing.Optional[int] = None) -> typing.List[tuple]:
+        """ Return sublevel set incl. boundary
 
-    def sublevel(self, level=0.0) -> typing.List[numpy.ndarray]:
+            Note:
+                non-strict sublevel set
+
+        """
+        return self.value_function  <= level
+        ## Get indices
+        # return dask.array.argwhere(self.value_function <= level)
+
+    def sublevel_indices(self, level : float = 0.0,
+            time_index : typing.Optional[int] = None) -> typing.List[tuple]:
+        """ Return sublevel set incl. boundary
+
+            Note:
+                non-strict sublevel set
+
+        """
+        return dask.array.argwhere(self.value_function <= level)
+
+    def sublevel(self, mask) -> typing.List[numpy.ndarray]:
         """ Return states of sublevel of level set. """
-        indices_list = self.sublevel_indices(level)
-        states_list = self._get_states_from_indices(indices_list)
-        return states_list
+        return self.value_function[mask]
 
-    def value_function(self,
-            x : numpy.ndarray) -> numpy.ndarray:
-        """ Return value function for closest grid index. """
-        index = self.grid.index(x)
+    def at_time(self, time_index):
+        """ Create time index sliced dask array from HDF5 dataset handle. """
+        ## This imports the value function in wrong shape => Transpose
+        vf = self.data_handle['value_function']
+        self.value_function = dask.array.from_array(vf).transpose()[..., time_index]
 
-        try:
-            return self.data[index]
-        except Exception as e:
-            self.grid.debug('Failed to find value function for state due to: ', e)
-            self.grid.print_config(x)
-            raise pylevel.error.StateLookupError()
+    def debug(self, *args):
+        """ Print debug messages if debugging is enabled. """
+        if self.debug_is_enabled:
+            print("ReachableSetData: ", *args)
+
