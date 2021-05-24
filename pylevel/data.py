@@ -270,6 +270,7 @@ class ReachableSetData:
                 non-strict sublevel set
 
         """
+        print(self.value_function.shape)
         return self.value_function  <= level
         ## Get indices
         # return dask.array.argwhere(self.value_function <= level)

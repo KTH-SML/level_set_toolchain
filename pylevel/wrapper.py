@@ -5,7 +5,6 @@
 import os
 import sys
 import attr
-import zarr
 import dask
 import time
 import h5py
@@ -105,6 +104,8 @@ class ReachableSetWrapper:
 
     ## Show config by default
     show_config = attr.ib(default=True, type=bool)
+    ## Visualise grid initialisation
+    visualise_grid = attr.ib(default=False, type=bool)
 
     ## Export if load_from memory is not provided or fails
     initialise_once = attr.ib(default=True, type=bool)
@@ -156,15 +157,6 @@ class ReachableSetWrapper:
 
         ## Fetch hdf5 data group
         data = self.data_handle
-
-        ## Fetch hdf5 grid group
-        # Helper to access grid indices or states and their discretisation
-        # Grid with ds dimensional array and Nx1, Nx2, Nx3, Nxn entries
-        self.grid = pylevel.data.Grid(
-                data_path=self.path,
-                data_handle=data,
-                show_config=self.show_config,
-                debug_is_enabled=self.debug_is_enabled)
 
         # States
         self._initialise_sets()
@@ -230,9 +222,11 @@ class ReachableSetWrapper:
                     time_index=time_index)
 
             self.debug('Subset mask took : ', time.time() - ti)
+
             ## Compute dask graph
             subset_data = subset_mask.compute()
             self.debug('Subset mask computation  took : ', time.time() - ti)
+            print('Subset mask shape: ', subset_data.shape)
 
             ## Skip empty level sets
             if not subset_data.any():
@@ -246,7 +240,6 @@ class ReachableSetWrapper:
 
             ## Store sparse subset mask
             # subset_mask.map_blocks(sparse.COO)
-            print('Subset mask shape: ', subset_mask.shape)
             subset = group_subsets.require_dataset(
                     str(time_index),
                     subset_data.shape,
@@ -373,6 +366,15 @@ class ReachableSetWrapper:
         self.data_handle = data_handle
         self.debug('Retrieved data handle: ', data_handle)
 
+        ## Fetch hdf5 grid group
+        # Helper to access grid indices or states and their discretisation
+        # Grid with ds dimensional array and Nx1, Nx2, Nx3, Nxn entries
+        self.grid = pylevel.data.Grid(
+                data_path=self.path,
+                data_handle=data_handle,
+                show_config=self.visualise_grid,
+                debug_is_enabled=self.visualise_grid)
+
         ## Retrieve general data groups (ds, dt)
         self.value_function = dask.array.from_array(data_handle['value_function']).transpose()
         ## TBD: self.gradient = dask.array.from_array(data['gradient'])
@@ -399,27 +401,11 @@ class ReachableSetWrapper:
     def reach_at_t(self,
             t : float,
             convexified=True):
-        """ Return level set set at time t or closest discretised index.
+        """ Return reachable set at time t. 
 
-            Example:
-
-
-                # About 10ms
-                Grid configuration:
-                Grid (min | max): ([-1.  -1.  -0.5 -0.5] | [1.  1.  0.5 0.5])
-                Grid step size:  [0.10526316 0.10526316 0.11111111 0.11111111]
-                Complexity:
-                --> Dimension: 4
-                --> States:  29241.0
-
-                # About 120ms
-                Grid configuration:
-                Grid (min | max): ([-1.5  -0.25 -1.5  -0.25] | [1.5  0.25 1.5  0.25])
-                Grid step size:  [0.10344828 0.125      0.10344828 0.125     ]
-                Complexity:
-                --> Dimension: 4
-                --> States:  13456.0
-
+            Note:
+                Optionally only return convexified reachable set for 
+                visualisation purposes.
         """
         ts = numpy.array(self.time)
         t_idx = numpy.abs(ts - t).argmin()
@@ -449,6 +435,7 @@ class ReachableSetWrapper:
         """ Return if state is member with level set agnostic membership. """
         ## TODO: Use try and except lookup on subset_mask
         ## TODO: Verify simplified lookup
+        print('self.grid: ', self.grid)
         index = self.grid.index(state)
 
         try:
