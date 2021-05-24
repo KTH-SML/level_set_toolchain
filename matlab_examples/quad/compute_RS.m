@@ -6,7 +6,7 @@ save_path = '/home/fjiang/Projects/MATLAB/Experiments/SML_level_set/cached_rs/qu
 params.uMin = -1; % Acceleration limits
 params.uMax = 1;
 params.makeVideo = false;
-
+params.dt = 0.05;
 % Desired resolution of grid [x, v_x, y, v_y]
 resolution = [0.1 0.1 0.1 0.1];
 % Note, these resolutions should be smaller than the target region
