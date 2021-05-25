@@ -53,6 +53,11 @@ class ReachableSetWrapper:
             On initialisation for each discretised time step a
             ReachableSetData entry is added to the `sets` attribute.
 
+        Note:
+            Convexified returns a 2D representation in XY of the statespace
+            where the non-convexified returns a boolean mask that has to be transformed
+            into an index array and scaled by its physical dimension to received the state.
+
     """
     ## Initialisation arguments
     label = attr.ib(type=str)
@@ -131,7 +136,7 @@ class ReachableSetWrapper:
 
     def _access_data_file(self):
         """ Access data file and recover meta data. """
-        self.debug('Access HDF5 data at:\n{}'.format(self.path))
+        self._debug('Access HDF5 data at:\n{}'.format(self.path))
 
         ## TODO: Use distributed computing for large files
         # Create client and assign computing resources (build graph in initialiser)
@@ -153,7 +158,7 @@ class ReachableSetWrapper:
     def _initialise_data(self):
         """ Initialise wrapper specific data. """
         ## Initialise loader (without storing raw data reference)
-        self.debug("Initialise from: {}".format(self.path))
+        self._debug("Initialise from: {}".format(self.path))
 
         ## Fetch hdf5 data group
         data = self.data_handle
@@ -164,7 +169,7 @@ class ReachableSetWrapper:
         ## Set data group metadata
         data.attrs['is_initialised'] = True
         data.attrs['timestamp_initialisation'] = time.time()
-        self.debug('Data initialised: \t{} (timestamp: {})'.format(
+        self._debug('Data initialised: \t{} (timestamp: {})'.format(
             data.attrs['is_initialised'],
             data.attrs['timestamp_initialisation']))
         ## Close file
@@ -192,7 +197,7 @@ class ReachableSetWrapper:
         group_subsets= self.group_subsets
         group_subsets_convexified = self.group_subsets_convexified
 
-        self.debug('ReachableSetWrapper initialising data for {}'.format(
+        self._debug('ReachableSetWrapper initialising data for {}'.format(
             group_wrapper.keys()))
 
         ## Ordered dictionary for time sequence preservance in ttr search
@@ -207,7 +212,7 @@ class ReachableSetWrapper:
         for time_index, time_stamp in enumerate(self.time):
             print('Compute level set at time: ', time_stamp)
             stamp = time.time()
-            self.debug('Initialising time index {} of {}'.format(
+            self._debug('Initialising time index {} of {}'.format(
                 time_index, len(self.time) - 1))
 
             self._reset_datasets_of_index(
@@ -221,11 +226,11 @@ class ReachableSetWrapper:
                     level=0.0,
                     time_index=time_index)
 
-            self.debug('Subset mask took : ', time.time() - ti)
+            self._debug('Subset mask took : ', time.time() - ti)
 
             ## Compute dask graph
             subset_data = subset_mask.compute()
-            self.debug('Subset mask computation  took : ', time.time() - ti)
+            self._debug('Subset mask computation  took : ', time.time() - ti)
             print('Subset mask shape: ', subset_data.shape)
 
             ## Skip empty level sets
@@ -250,7 +255,7 @@ class ReachableSetWrapper:
             ## Return indices of active states
             ti = time.time()
             indices = dask.array.argwhere(subset_data).compute()
-            self.debug('Indices took : ', time.time() - ti)
+            self._debug('Indices took : ', time.time() - ti)
 
             ti = time.time()
             ## Attempt to simplify state conversion by selecting only simplices
@@ -271,7 +276,7 @@ class ReachableSetWrapper:
                         grid.state,
                         axis=1,
                         arr=indices).compute()
-            self.debug('States took : ', time.time() - ti)
+            self._debug('States took : ', time.time() - ti)
 
             if True:
                 ti = time.time()
@@ -295,7 +300,7 @@ class ReachableSetWrapper:
                         dtype='f',
                         compression='gzip')
                 subset_convexified[...] = vertices
-                self.debug('Dataset expansion took : ', time.time() - ti)
+                self._debug('Dataset expansion took : ', time.time() - ti)
 
                 if False:
                     import matplotlib.pyplot as plt
@@ -324,12 +329,12 @@ class ReachableSetWrapper:
             # print('Size of dense: ', get_size(subset_data_dense))
             # Dense is almost factor 10x larger than sparse (But sparse should be todense on retrieval)
 
-            self.debug('--> Initialised in {}s'.format(time.time() - stamp))
+            self._debug('--> Initialised in {}s'.format(time.time() - stamp))
 
             ebs = 0
             if False and self.verbosify_storage:
                 elements = level_set_dict.keys()
-                self.debug('----> Has elements: ', elements)
+                self._debug('----> Has elements: ', elements)
                 for e in elements:
                     ## Element binary size
                     ebs = get_size(level_set_dict[e])
@@ -341,9 +346,9 @@ class ReachableSetWrapper:
                     #    e, sys.getsize
                     #    ))
 
-        self.debug('Has initialised: ', self.group_subsets.keys())
-        self.debug('Has initialised: (convexified) ', self.group_subsets_convexified.keys())
-        self.debug('All sets initialised.')
+        self._debug('Has initialised: ', self.group_subsets.keys())
+        self._debug('Has initialised: (convexified) ', self.group_subsets_convexified.keys())
+        self._debug('All sets initialised.')
 
     def _reset_datasets_of_index(self, time_index, wrapper_data_handle):
         """ Resets datasets in existing HDF5 wrapper data group. """
@@ -364,7 +369,7 @@ class ReachableSetWrapper:
         self.file_handle = file_handle
         data_handle = file_handle['/data']
         self.data_handle = data_handle
-        self.debug('Retrieved data handle: ', data_handle)
+        self._debug('Retrieved data handle: ', data_handle)
 
         ## Fetch hdf5 grid group
         # Helper to access grid indices or states and their discretisation
@@ -381,6 +386,9 @@ class ReachableSetWrapper:
         ## Available time discretisation indices
         time = dask.array.from_array(data_handle['time']).compute()
         self.time = numpy.squeeze(numpy.array(time).flatten())
+        ## Ensure time is increasing with indices
+        if self.time[0] > self.time[-1]:
+            self.time = self.time.reverse()
 
         ## Initialise wrapper specific data groups
         ## Create wrapper data group to add datasets
@@ -393,10 +401,16 @@ class ReachableSetWrapper:
         # same as above : convexified states
         self.group_subsets_convexified = self.group_wrapper.require_group("subsets_convexified")
 
-    def debug(self, *args):
+    def _debug(self, *args):
         """ Print debug messages if debugging is enabled. """
         if self.debug_is_enabled:
             print("LevelSetWrapper: ", *args)
+
+    def reach_at_t_idx(self, t_idx : int, convexified=True):
+        """ Return reachable state set at time_idx. """
+        if convexified:
+            return self.group_subsets_convexified[str(t_idx)][...]
+        return self.group_subsets[str(t_idx)][...]
 
     def reach_at_t(self,
             t : float,
@@ -409,12 +423,15 @@ class ReachableSetWrapper:
         """
         ts = numpy.array(self.time)
         t_idx = numpy.abs(ts - t).argmin()
-        print('Retrieve subset: ', t_idx)
-        print('Available datasets : ', self.group_subsets.keys())
+        
+        if t > self.time[-1]: 
+            self._debug('State not reachable within time: {}'.format(
+                t))
+            raise pylevel.errors.StateNotReachableError()
 
-        return self.group_subsets_convexified[str(t_idx)][...]
+        return self._reach_at_t_idx(t_idx, convexified)
 
-    def reach_at_ttr(self,
+    def reach_at_min_ttr(self,
             state : numpy.ndarray,
             convexified : bool=False):
         """ Return minimial time to reach set and its discretised time. """
@@ -423,41 +440,62 @@ class ReachableSetWrapper:
 
         index = self.grid.index(state)
 
-        for time_index, set_dictionary in self.sets.items():
-            if index in set_dictionary['grid_indices']:
-                return set_dictionary[state_key], self.time[time_index]
+        ## Verify that time is closest to furthest
+        # Assume goal set is not avoid set
 
-        self.debug('Failed to find index in any set: Unreachable')
+        for t_idx, time_i in enumerate(self.time):
+            self._debug('Test reach TTR at time index: {} at time {}s'.format(
+                t_idx, time_i)) 
+            try:
+                state_set = self.group_subsets[str(t_idx)]
+                rs = state_set[index]
+
+                if convexified:
+                    state_set = self.group_subsets_convexified[str(t_idx)][...]
+
+                self._debug('ReachableSetWrapper: State found in ', time_i) 
+
+                return state_set, time_i
+            except LookupError as e:
+                import traceback
+                self._debug('ReachableSetWrapper: State not found.', 
+                    'Continue search ...\n' , e.__traceback__)
+                if self.debug_is_enabled:
+                    traceback.print_tb(e.__traceback__)
+
+        self._debug('ReachableSetWrapper: Failed to find index in any set.', 
+            'Unreachable state.')
 
         raise pylevel.error.StateNotReachableError()
 
     def is_member(self, state: numpy.ndarray) -> numpy.float:
-        """ Return if state is member with level set agnostic membership. """
-        ## TODO: Use try and except lookup on subset_mask
-        ## TODO: Verify simplified lookup
-        print('self.grid: ', self.grid)
+        """ Return if state is not member of any reachable state sets. """  
         index = self.grid.index(state)
 
-        try:
-            ## Iterate over each discretised time index from largest to smallest
-            for t_idx in enumerate(self.time):
-                try:
-                    state_set = self.group_subsets[str(t_idx)]
-                    print('Attempt to access {} in {}'.format(state_set, t_idx))
-                    rs = state_set[index]
-                    return self.time[t_idx]
-                except:
-                    print('Skipped state set for time: ', t_idx, '(time {})'.format(self.time[t_idx]))
-                    ## No reachable set found (continue)
-                    pass
+        ## Search from largest state set
+        ## -> This may only be true for current state space and dynamics!
 
-            # and return first match
-            # for level_set in self.group_subsets.keys():
-            # TODO: Use proper access
-            raise NotImplementedError()
-            for level_set in self.sets.values():
-                if index in level_set['grid_indices']:
-                    return True
-        ## TODO: Use proper exception
-        except Exception as e:
-            return False
+        self._debug('Test only largest state set for membership {}'.format(
+            self.time[-1])) 
+        for time_idx, time_i in enumerate(self.time):
+            try:
+                state_set = self.group_subsets[str(time_idx)][...]
+                rs = state_set[index]
+
+                return True 
+            except LookupError as e:
+                import traceback
+                self._debug('ReachableSetWrapper: State not found.', 
+                    'Continue search ...\n' , e.__traceback__)
+
+            if self.debug_is_enabled:
+                traceback.print_tb(e.__traceback__)
+        ## Intentional indent in case try: except is generalised in for loop
+        # General dynamics require testing all reachable sets
+        self._debug('ReachableSetWrapper: Failed to find index in any set.') 
+        return False
+
+    def is_not_member(self, state: numpy.ndarray) -> numpy.float:
+        """ Return if state is not member of any reachable state sets. """  
+
+        return not self.is_member(state)
