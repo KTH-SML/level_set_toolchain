@@ -6,6 +6,7 @@ import os
 import sys
 import attr
 import dask
+import enum
 import time
 import h5py
 import numpy
@@ -107,6 +108,8 @@ class ReachableSetWrapper:
     ## Grid utility object
     grid = attr.ib(default=None, type=typing.Optional[pylevel.data.Grid])
 
+    ## State set type (optional)
+    state_set_type = attr.ib(default=None, type=typing.Optional[enum.IntEnum])
     ## Show config by default
     show_config = attr.ib(default=True, type=bool)
     ## Visualise grid initialisation
@@ -456,7 +459,7 @@ class ReachableSetWrapper:
                 self._debug('ReachableSetWrapper: State found in ', time_i) 
 
                 return state_set, time_i
-            except LookupError as e:
+            except (LookupError, ValueError) as e:
                 import traceback
                 self._debug('ReachableSetWrapper: State not found.', 
                     'Continue search ...\n' , e.__traceback__)
@@ -487,9 +490,8 @@ class ReachableSetWrapper:
                 import traceback
                 self._debug('ReachableSetWrapper: State not found.', 
                     'Continue search ...\n' , e.__traceback__)
-
-            if self.debug_is_enabled:
-                traceback.print_tb(e.__traceback__)
+                if self.debug_is_enabled:
+                    traceback.print_tb(e.__traceback__)
         ## Intentional indent in case try: except is generalised in for loop
         # General dynamics require testing all reachable sets
         self._debug('ReachableSetWrapper: Failed to find index in any set.') 
@@ -499,3 +501,4 @@ class ReachableSetWrapper:
         """ Return if state is not member of any reachable state sets. """  
 
         return not self.is_member(state)
+
