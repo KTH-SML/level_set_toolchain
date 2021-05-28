@@ -447,8 +447,7 @@ class ReachableSetWrapper:
         # Assume goal set is not avoid set
 
         for t_idx, time_i in enumerate(self.time):
-            self._debug('Test reach TTR at time index: {} at time {}s'.format(
-                t_idx, time_i)) 
+            self._debug('ReachableSetWrapper: Find min reach TTR at time index: {} at time {}s'.format(t_idx, time_i)) 
             try:
                 state_set = self.group_subsets[str(t_idx)]
                 rs = state_set[index]
@@ -456,15 +455,11 @@ class ReachableSetWrapper:
                 if convexified:
                     state_set = self.group_subsets_convexified[str(t_idx)][...]
 
-                self._debug('ReachableSetWrapper: State found in ', time_i) 
+                self._debug('ReachableSetWrapper: Min reach TTR state found in ', time_i) 
 
                 return state_set, time_i
             except (LookupError, ValueError) as e:
-                import traceback
-                self._debug('ReachableSetWrapper: State not found.', 
-                    'Continue search ...\n' , e.__traceback__)
-                if self.debug_is_enabled:
-                    traceback.print_tb(e.__traceback__)
+                self._debug(traceback.print_tb(e.__traceback__))
 
         self._debug('ReachableSetWrapper: Failed to find index in any set.', 
             'Unreachable state.')
@@ -475,11 +470,6 @@ class ReachableSetWrapper:
         """ Return if state is not member of any reachable state sets. """  
         index = self.grid.index(state)
 
-        ## Search from largest state set
-        ## -> This may only be true for current state space and dynamics!
-
-        self._debug('Test only largest state set for membership {}'.format(
-            self.time[-1])) 
         for time_idx, time_i in enumerate(self.time):
             try:
                 state_set = self.group_subsets[str(time_idx)][...]
@@ -487,11 +477,12 @@ class ReachableSetWrapper:
 
                 return True 
             except LookupError as e:
-                import traceback
-                self._debug('ReachableSetWrapper: State not found.', 
-                    'Continue search ...\n' , e.__traceback__)
-                if self.debug_is_enabled:
-                    traceback.print_tb(e.__traceback__)
+                pass
+                # import traceback
+                # self._debug('ReachableSetWrapper: State not found.', 
+                #     'Continue search ...\n' , e.__traceback__)
+                # if self.debug_is_enabled:
+                #     traceback.print_tb(e.__traceback__)
         ## Intentional indent in case try: except is generalised in for loop
         # General dynamics require testing all reachable sets
         self._debug('ReachableSetWrapper: Failed to find index in any set.') 
