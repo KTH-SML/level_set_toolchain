@@ -234,7 +234,6 @@ class ReachableSetWrapper:
             ## Compute dask graph
             subset_data = subset_mask.compute()
             self._debug('Subset mask computation  took : ', time.time() - ti)
-            print('Subset mask shape: ', subset_data.shape)
 
             ## Skip empty level sets
             if not subset_data.any():
@@ -432,7 +431,7 @@ class ReachableSetWrapper:
                 t))
             raise pylevel.errors.StateNotReachableError()
 
-        return self._reach_at_t_idx(t_idx, convexified)
+        return self.reach_at_t_idx(t_idx, convexified)
 
     def reach_at_min_ttr(self,
             state : numpy.ndarray,
@@ -450,7 +449,10 @@ class ReachableSetWrapper:
             self._debug('ReachableSetWrapper: Find min reach TTR at time index: {} at time {}s'.format(t_idx, time_i)) 
             try:
                 state_set = self.group_subsets[str(t_idx)]
-                rs = state_set[index]
+
+                if not state_set[index]:
+                    continue
+                self._debug('ReachableSetWrapper: Found state {} at time {}'.format(state, time_i))
 
                 if convexified:
                     state_set = self.group_subsets_convexified[str(t_idx)][...]
@@ -459,6 +461,7 @@ class ReachableSetWrapper:
 
                 return state_set, time_i
             except (LookupError, ValueError) as e:
+                import traceback
                 self._debug(traceback.print_tb(e.__traceback__))
 
         self._debug('ReachableSetWrapper: Failed to find index in any set.', 
@@ -473,18 +476,11 @@ class ReachableSetWrapper:
         for time_idx, time_i in enumerate(self.time):
             try:
                 state_set = self.group_subsets[str(time_idx)][...]
-                rs = state_set[index]
-
-                return True 
+                return state_set[index]
             except LookupError as e:
+                # self._debug("Failed to find index in {}".format(time_idx))
                 pass
-                # import traceback
-                # self._debug('ReachableSetWrapper: State not found.', 
-                #     'Continue search ...\n' , e.__traceback__)
-                # if self.debug_is_enabled:
-                #     traceback.print_tb(e.__traceback__)
-        ## Intentional indent in case try: except is generalised in for loop
-        # General dynamics require testing all reachable sets
+
         self._debug('ReachableSetWrapper: Failed to find index in any set.') 
         return False
 
