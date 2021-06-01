@@ -97,6 +97,9 @@ class ReachableSetWrapper:
     ## Time data
     # HDF5: /data/time dataset
     time = attr.ib(default=None, type=typing.Optional[typing.List[int]])
+    
+    ## Maximal time to reach
+    maximum_time_to_reach = attr.ib(default=None, type=typing.Optional[float])
 
     ## Massaged data groups (of datasets)
     group_wrapper = attr.ib(default=None, type=typing.Optional[h5py.Group])
@@ -388,9 +391,13 @@ class ReachableSetWrapper:
         ## Available time discretisation indices
         time = dask.array.from_array(data_handle['time']).compute()
         self.time = numpy.squeeze(numpy.array(time).flatten())
+
         ## Ensure time is increasing with indices
         if self.time[0] > self.time[-1]:
             self.time = self.time.reverse()
+
+        ## TODO: Find maximal ttr that is computed
+        self.maximum_time_to_reach = self.time[-1]
 
         ## Initialise wrapper specific data groups
         ## Create wrapper data group to add datasets
@@ -469,19 +476,29 @@ class ReachableSetWrapper:
 
         raise pylevel.error.StateNotReachableError()
 
-    def is_member(self, state: numpy.ndarray) -> numpy.float:
+    def is_member(self, state: numpy.ndarray, return_time_to_reach=False) -> numpy.float:
         """ Return if state is not member of any reachable state sets. """  
-        index = self.grid.index(state)
+        index = self.grid.index(state.flatten())
 
         for time_idx, time_i in enumerate(self.time):
             try:
+                # print('Test :', self.state_set_type, ' is member at ', time_i)
                 state_set = self.group_subsets[str(time_idx)][...]
-                return state_set[index]
+                if not state_set[index]:
+                    continue
+
+                if return_time_to_reach:
+                    return True, time_i
+
+                return True
             except LookupError as e:
                 # self._debug("Failed to find index in {}".format(time_idx))
                 pass
 
         self._debug('ReachableSetWrapper: Failed to find index in any set.') 
+
+        if return_time_to_reach:
+            return False, None
         return False
 
     def is_not_member(self, state: numpy.ndarray) -> numpy.float:
@@ -489,3 +506,24 @@ class ReachableSetWrapper:
 
         return not self.is_member(state)
 
+    def gradient_xy(self, state: numpy.ndarray) -> numpy.ndarray:
+        """ Return XY-plane gradient for current state. """
+        # Look up value function for grid 
+        index = self.grid.index(state)
+
+        ## Current state value function
+        v = self.value_function[index]
+        ## List of neighbor indices (4)
+        ## TODO: Implement neighbours lookup (filter out not-reachable) 
+        # Amount of indices times state space dim: di x ds
+        ns = self.grid.get_xy_neighbours(index)        
+        ## TODO: Debug if element wise subtraction works
+        delta_indices = numpy.subtract(ns, index)
+        ## Indicies spatial vector magnitude
+        ## TODO: Verify that this is along each row
+        dsi = numpy.linalg.norm(delta_indices*self.ds, axis=1)
+        ## di x 1
+        vs = numpy.apply_along_axis(lambda index: self.value_function[index] - v)
+        ## di x 1 / di x 1
+        vs = numpy.divide(vs, dsi)
+        ## 

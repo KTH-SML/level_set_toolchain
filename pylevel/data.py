@@ -49,6 +49,8 @@ class Grid:
     x_min = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
     ## Maximum state value on grid end
     x_max = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
+    ## Maximum state value on grid end
+    index_max = attr.ib(default=None, type=typing.Optional[int])
     ## Count of grid elements along each dimension
     N = attr.ib(default=None, type=typing.Optional[numpy.ndarray])
     ## Grid discretisation step along each dimension
@@ -81,6 +83,9 @@ class Grid:
         self.dx = self._initialise_field('dx')
         self.x_min = self._initialise_field('min')
         self.x_max = self._initialise_field('max')
+
+        ## Maximum index along each dimension
+        self.index_max = int(self.x_max / self.dx)
         self.N = self._initialise_field('N').astype(int)
 
         self.N_data = numpy.prod(self.N)
@@ -99,6 +104,30 @@ class Grid:
         if self.show_config:
             self.print_config()
 
+    def _index_in_grid(self, index):
+        """ Return true if all elements satisfy grid resolution. """
+        return (numpy.ones(self.dx.shape) <= index <= self.index_max).all()
+
+    def get_xy_neighbours(self, index):
+        """ Return valid neighbours. 
+
+            Note:
+                Index should be one dimensional.
+
+        """
+        # apply offset mask to current index and check if they are in grid
+        ## TODO: drone state space specific implementation
+        indices_offset = numpy.array([
+                            [-1, 0, 0, 0],
+                            [1, 0, 0, 0],
+                            [0, 0, -1, 0],
+                            [0, 0, 1, 0]]
+
+        indices = numpy.add(index, indices_offset)
+        ## TODO: Verify that indices are in grid
+        ## TODO: Verify that index in grid
+        numpy.apply_along_axis(self._index_in_grid, axis=1)
+
     def _initialise_field(self, field_name):
         """ Initialise dask array from hdf5 file. """
         return numpy.squeeze(dask.array.from_array(self.grid[field_name], chunks=1).compute())
@@ -114,17 +143,24 @@ class Grid:
         print('--> Dimension:', self.dim[...])
         print('--> Datapoints: ', self.N_data[...])
 
+    ## LEGACY
     def _is_state_in_grid(self, x : numpy.ndarray) -> bool:
-        """ Return true if state is in discretisation range. """
+        """ Return true if state is in discretisation range. 
+    
+            Note:
+                Unmaintained at the moment. Plesae revise before
+                usage.
+
+        """
         if not numpy.isnan(numpy.sum(numpy.array(x))):
             above_min = numpy.array(x) > numpy.array(self.x_min)
-            below_max = numpy.array(x) < numpy.array(self.max)
+            below_max = numpy.array(x) < numpy.array(self.x_max)
             return above_min.all() and below_max.all()
         else:
             return False
 
     def _is_dimension_periodic(self, dim: None) ->  bool:
-        """ Docstring missing. """
+        """ Return if grid dimension is labeled periodic in MATLAB. """
         return "addGhostPeriodic" in self.boundary[dim][0][0][3][0][0][0][0]
 
     def debug(self, *args):
