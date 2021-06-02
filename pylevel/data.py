@@ -85,7 +85,9 @@ class Grid:
         self.x_max = self._initialise_field('max')
 
         ## Maximum index along each dimension
-        self.index_max = int(self.x_max / self.dx)
+        self.index_min = numpy.zeros(self.dx.shape).flatten()
+        ## TODO: Verify maximum index as len - 1
+        self.index_max = (self.x_max / self.dx).astype(int) - 1
         self.N = self._initialise_field('N').astype(int)
 
         self.N_data = numpy.prod(self.N)
@@ -106,27 +108,33 @@ class Grid:
 
     def _index_in_grid(self, index):
         """ Return true if all elements satisfy grid resolution. """
-        return (numpy.ones(self.dx.shape) <= index <= self.index_max).all()
+        print('Compare with: \t {} \n min: \t{}\n max: \t {}'.format(
+                index, self.index_min, self.index_max))
+        return (self.index_min <= index).all() and (index <= self.index_max).all()
 
-    def get_xy_neighbours(self, index):
-        """ Return valid neighbours. 
+    def index_neighbours(self, index, axes : typing.List[int], return_offset=False):
+        """ Return valid neighbours for specified axes. 
 
             Note:
                 Index should be one dimensional.
 
         """
-        # apply offset mask to current index and check if they are in grid
-        ## TODO: drone state space specific implementation
+
+        ## TODO: Drone specific implementation (Use axis to generate pairing)
+        # For each axis +1 and -1 each axis, 
+        # then for all extend with next axis, etc.
         indices_offset = numpy.array([
-                            [-1, 0, 0, 0],
-                            [1, 0, 0, 0],
-                            [0, 0, -1, 0],
-                            [0, 0, 1, 0]]
+                             [-1, 0, 0, 0],
+                             [1, 0, 0, 0],
+                             [0, 0, -1, 0],
+                             [0, 0, 1, 0]])
 
         indices = numpy.add(index, indices_offset)
-        ## TODO: Verify that indices are in grid
-        ## TODO: Verify that index in grid
-        numpy.apply_along_axis(self._index_in_grid, axis=1)
+        indices_mask = numpy.apply_along_axis(self._index_in_grid, arr=indices, axis=1)
+
+        if return_offset:
+            return indices[indices_mask], indices_offset[indices_mask]
+        return indices[indices_mask]
 
     def _initialise_field(self, field_name):
         """ Initialise dask array from hdf5 file. """
@@ -172,7 +180,7 @@ class Grid:
     def index(self, x : numpy.ndarray) -> tuple:
         """ Return grid index of state rounded to next grid index. """
 
-        return tuple(((x - self.x_min) / self.dx).astype(int).flatten())
+        return tuple(((x.ravel() - self.x_min) / self.dx).astype(int).flatten())
 
     def state(self, index : numpy.ndarray) -> numpy.ndarray:
         """ Return state of grid index. """

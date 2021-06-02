@@ -113,6 +113,8 @@ class ReachableSetWrapper:
 
     ## State set type (optional)
     state_set_type = attr.ib(default=None, type=typing.Optional[enum.IntEnum])
+    ## Safety priority (optional for avoid sets) (set from external)
+    safety_priority = attr.ib(default=1, type=int)
     ## Show config by default
     show_config = attr.ib(default=True, type=bool)
     ## Visualise grid initialisation
@@ -506,24 +508,34 @@ class ReachableSetWrapper:
 
         return not self.is_member(state)
 
-    def gradient_xy(self, state: numpy.ndarray) -> numpy.ndarray:
-        """ Return XY-plane gradient for current state. """
+    def gradient(self, 
+            state: numpy.ndarray, 
+            axes : typing.Optional[typing.List[int]]= None) -> numpy.ndarray:
+        """ Return gradient of current state for specified axes. """
+        ## TODO: Generating reach sets to debug
         # Look up value function for grid 
         index = self.grid.index(state)
 
+        print(index)
         ## Current state value function
         v = self.value_function[index]
+
         ## List of neighbor indices (4)
-        ## TODO: Implement neighbours lookup (filter out not-reachable) 
         # Amount of indices times state space dim: di x ds
-        ns = self.grid.get_xy_neighbours(index)        
-        ## TODO: Debug if element wise subtraction works
-        delta_indices = numpy.subtract(ns, index)
-        ## Indicies spatial vector magnitude
-        ## TODO: Verify that this is along each row
-        dsi = numpy.linalg.norm(delta_indices*self.ds, axis=1)
-        ## di x 1
-        vs = numpy.apply_along_axis(lambda index: self.value_function[index] - v)
-        ## di x 1 / di x 1
-        vs = numpy.divide(vs, dsi)
-        ## 
+        indices, indices_delta = self.grid.index_neighbours(
+                index, axes=axes, return_offset=True)
+
+        ## TODO: Remove me
+        print('--> Index ({}) has {} neighbours: \n{}\n'.format(
+             index, len(indices), indices))
+
+        ## di x 1 : scalar spatial magnitude for each index
+        dsi = numpy.linalg.norm(indices_delta * self.grid.dx, axis=1)
+        ## di x 1 : value function differential for each index
+        vs = numpy.apply_along_axis(
+                lambda index: self.value_function[tuple(index)] - v, arr=indices, axis=1)
+        ## di x 1 / di x 1 : gradient for each index based on its spatial magnitude
+        gs = numpy.divide(vs, dsi)
+
+        return numpy.max(gs)
+
