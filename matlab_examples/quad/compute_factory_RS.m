@@ -69,9 +69,9 @@ max_left = [shelf_left_max(1), Inf, Inf, Inf];
 shelf_left = shapeRectangleByCorners(grid, min_left, max_left);
 shelves_inspect_a = min(shelf_center, shelf_left);
 
-% Compute avoid leave inspection zone (RCIS of inspection zone)
+%% Compute avoid leave inspection zone (RCIS of inspection zone)
 params = default_params;
-params.label = 'always_inspection_zone_a_BRS';
+params.label = 'alw_inspect_zone_a';
 params.g = grid;
 % assume almost worst case
 params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; 
@@ -84,19 +84,18 @@ params.is_avoid_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path params.label];
 data = quad_RS(params);
-data.value_function = - data.value_function(:, :, :, :, end);
 % Define target set with (grid, ignoreDims, center, radius)
 export_to_mat(save_path, params.label,  data);
 % Reuse in global grid for eventually inspection zone
-rcis_inspect_zone_a = data.value_function;
+rcis_inspect_zone_a =  -data.value_function(:, :, :, :, end);;
 
 % Compute reach inspection goal in inspection zone
 params = default_params;
-params.label = 'eventually_inspection_goal_a_BRS';
+params.label = 'ev_inspect_goal_a';
 params.g = grid;
 params.figNum = 2;
 params.isBackwards = true; % BRS
-params.T = 5; % seconds
+params.T = 12; % seconds
 params.target = shapeCylinder(params.g, [2, 4], [1.1; 0; 0.5; 0], 0.1);
 params.obstacle = min(-rcis_inspect_zone_a, shelves_inspect_a);
 params.is_reach_colors = true;
@@ -108,7 +107,7 @@ export_to_mat(save_path, params.label,  data);
 % Inspect Zone A Grid: Avoid Backward Reachable Tubes of Shelves
 % Compute avoid shelf in each grid
 params = default_params;
-params.label = 'always_no_shelf_inspect_zone_a_BRS';
+params.label = 'alw_no_shelf_inspect_zone_a';
 params.g = grid;
 params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
 params.figNum = 4;
@@ -143,7 +142,7 @@ shelves_inspect_b = min(shelf_center, shelf_right);
 
 % Compute avoid leave inspection zone (RCIS of inspection zone)
 params = default_params;
-params.label = 'always_inspection_zone_b_BRS';
+params.label = 'alw_inspect_zone_b';
 params.g = grid;
 params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
 params.figNum = 3;
@@ -155,18 +154,17 @@ params.is_avoid_colors = true;
 params.isTube = true;
 params.videoFilename = [save_path params.label];
 data = quad_RS(params);
-data.value_function = - data.value_function(:, :, :, :, end);
 export_to_mat(save_path, params.label,  data);
 % Reuse in global grid for eventually inspection zone
-rcis_inspect_zone_b = data.value_function;
+rcis_inspect_zone_b =  - data.value_function(:, :, :, :, end);
 
 % Compute reach inspection goal in inspection zone
 params = default_params;
-params.label = 'eventually_inspection_goal_b_BRS';
+params.label = 'ev_inspect_goal_b';
 params.g = grid;
 params.figNum = 3;
 params.isBackwards = true; % BRS
-params.T = 8; % seconds
+params.T = 12; % seconds
 params.target = shapeCylinder(params.g, [2, 4], [1.1; 0; -0.5; 0], 0.1);
 params.obstacle = min(-rcis_inspect_zone_b, shelves_inspect_b);
 params.is_reach_colors = true;
@@ -177,7 +175,7 @@ export_to_mat(save_path, params.label,  data);
 
 % Compute avoid shelf in inspect zone B grid
 params = default_params;
-params.label = 'always_no_shelf_inspect_zone_b_BRS';
+params.label = 'alw_no_shelf_inspect_zone_b';
 params.g = grid;
 params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; % assume almost worst case
 params.figNum = 5;
@@ -212,7 +210,7 @@ params.label = 'FRS';
 params.g = grid;
 params.isBackwards = false;
 params.figNum = 1;
-params.T = 7.0; % seconds
+params.T = 7.0;  % seconds
 params.target = shapeCylinder(params.g, [2, 4], [0; 0; 0; 0], 0.1);
 params.is_reach_colors = true;
 params.isTube = true;
@@ -220,9 +218,10 @@ params.videoFilename = [save_path 'reach_BRS'];
 data = quad_RS(params);
 export_to_mat(save_path, params.label,  data);
 
+%%
 % Compute avoid shelf in global grid
 params = default_params;
-params.label = 'always_no_shelf_global_BRS';
+params.label = 'grid_global_avoid_shelf';
 params.g = grid;
 % assume almost worst case
 params.dMax = [0.0, dWorstCase, 0.0, dWorstCase]; 
@@ -236,10 +235,30 @@ params.isTube = true;
 params.videoFilename = [save_path params.label];
 data = quad_RS(params);
 export_to_mat(save_path, params.label,  data);
+grid_global_avoid_shelf = data.value_function(:, :, :, :, end);
+
+
+%% Compute reach RCIS of inspection zone
+params = default_params;
+params.label = 'grid_global_reach_avoid_shelf';
+params.g = grid;
+params.figNum = 2;
+params.isBackwards = true;  % BRS
+params.T = 3;
+% Using directly avoid from same grid
+% global_grid_avoid = migrateGrid(grid_zone_a, grid_global_avoid_shelf, grid');
+params.target = grid_global_avoid_shelf;
+params.obstacle = shelves_global;
+params.is_reach_colors = true;
+params.isTube = false;
+params.videoFilename = [save_path params.label];
+data = quad_RS(params);
+export_to_mat(save_path, params.label,  data);
+%%
 
 % Compute reach RCIS of inspection zone
 params = default_params;
-params.label = 'eventually_rcis_inspection_a_BRS';
+params.label = 'global_grid_reach_inspect_zone_a_rcis';
 params.g = grid;
 params.figNum = 2;
 params.isBackwards = true; % BRS
@@ -253,9 +272,10 @@ params.videoFilename = [save_path params.label];
 data = quad_RS(params);
 export_to_mat(save_path, params.label,  data);
 
+%%
 % Compute reach RCIS of inspection zone
 params = default_params;
-params.label = 'eventually_rcis_inspection_b_BRS';
+params.label = 'grid_global_reach_inspect_zone_b_rcis';
 params.g = grid;
 params.figNum = 3;
 params.isBackwards = true; % BRS
