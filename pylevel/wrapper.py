@@ -219,7 +219,7 @@ class ReachableSetWrapper:
         t0 = time.time()
         ## TODO: Check the time sequence (t0 to tf or flipped)
         for time_index, time_stamp in enumerate(self.time):
-             print('{} - Compute level set at time: {}'.format(time.time() - t0, time_stamp))
+            print('{} - Compute level set at time: {}'.format(time.time() - t0, time_stamp))
             stamp = time.time()
             self._debug('Initialising time index {} of {}'.format(
                 time_index, len(self.time) - 1))
@@ -397,7 +397,7 @@ class ReachableSetWrapper:
                 debug_is_enabled=self.visualise_grid)
 
         ## Retrieve general data groups (ds, dt)
-        self.value_function = numpy.array(dask.array.from_array(data_handle['value_function']).transpose()))
+        self.value_function = numpy.array(dask.array.from_array(data_handle['value_function']).transpose())
         ## TBD: self.gradient = dask.array.from_array(data['gradient'])
         ## Available time discretisation indices
         time = dask.array.from_array(data_handle['time']).compute()
