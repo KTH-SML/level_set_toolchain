@@ -449,7 +449,7 @@ class ReachableSetWrapper:
 
         state_key = "states_convexified" if convexified else "states"
 
-        index = self.grid.index(state)
+        index = self.grid.index_valid(state)
 
         ## Verify that time is closest to furthest
         # Assume goal set is not avoid set
@@ -470,8 +470,9 @@ class ReachableSetWrapper:
 
                 return state_set, time_i
             except (LookupError, ValueError) as e:
-                import traceback
-                self._debug(traceback.print_tb(e.__traceback__))
+                pass
+                # import traceback
+                # self._debug(traceback.print_tb(e.__traceback__))
 
         self._debug('ReachableSetWrapper: Failed to find index in any set.', 
             'Unreachable state.')
@@ -480,14 +481,15 @@ class ReachableSetWrapper:
 
     def is_member(self, state: numpy.ndarray, return_time_to_reach=False) -> numpy.float:
         """ Return if state is not member of any reachable state sets. """  
-        index = self.grid.index(state.flatten())
+        index = self.grid.index_valid(state.flatten())
 
         for time_idx, time_i in enumerate(self.time):
             try:
-                # print('Test :', self.state_set_type, ' is member at ', time_i)
                 state_set = self.group_subsets[str(time_idx)][...]
                 if not state_set[index]:
                     continue
+
+                print('Found member of ', self.state_set_type, ' (at time {})'.format(time_i))
 
                 if return_time_to_reach:
                     return True, time_i
@@ -498,10 +500,8 @@ class ReachableSetWrapper:
                 pass
 
         self._debug('ReachableSetWrapper: Failed to find index in any set.') 
+        raise pylevel.error.StateNotReachableError()
 
-        if return_time_to_reach:
-            return False, None
-        return False
 
     def is_not_member(self, state: numpy.ndarray) -> numpy.float:
         """ Return if state is not member of any reachable state sets. """  
@@ -510,32 +510,54 @@ class ReachableSetWrapper:
 
     def gradient(self, 
             state: numpy.ndarray, 
-            axes : typing.Optional[typing.List[int]]= None) -> numpy.ndarray:
-        """ Return gradient of current state for specified axes. """
+            ttr : float,
+            axes : typing.Optional[typing.List[int]] = None,
+            normalised : bool = False) -> numpy.ndarray:
+        """ Return gradient of current state for specified axes. 
+
+            Note:
+                To only use directional information use the `normalised`
+                argument and return the gradient unit vector instead.    
+
+        """
+
         ## TODO: Generating reach sets to debug
         # Look up value function for grid 
-        index = self.grid.index(state)
+        index = self.grid.index_valid(state)
 
-        print(index)
         ## Current state value function
-        v = self.value_function[index]
+        time_index = tuple(numpy.where(self.time == ttr)[0])
+        v = self.value_function[index + time_index]
 
-        ## List of neighbor indices (4)
-        # Amount of indices times state space dim: di x ds
-        indices, indices_delta = self.grid.index_neighbours(
-                index, axes=axes, return_offset=True)
-
+        try:
+            ## List of neighbor indices (4)
+            # Amount of indices times state space dim: di x ds
+            indices, indices_delta = self.grid.index_neighbours(
+                    index, axes=axes, return_offset=True)
+        except IndexHasNoValidNeighboursError as e:
+            return numpy.zeros((2, 1))
+            
         ## TODO: Remove me
-        print('--> Index ({}) has {} neighbours: \n{}\n'.format(
-             index, len(indices), indices))
+        # print('--> Index ({}) has {} neighbours: \n{}\n'.format(
+        #      index, len(indices), indices))
 
         ## di x 1 : scalar spatial magnitude for each index
         dsi = numpy.linalg.norm(indices_delta * self.grid.dx, axis=1)
+
         ## di x 1 : value function differential for each index
         vs = numpy.apply_along_axis(
-                lambda index: self.value_function[tuple(index)] - v, arr=indices, axis=1)
+                lambda index: self.value_function[tuple(index) + time_index] - v, arr=indices, axis=1)
         ## di x 1 / di x 1 : gradient for each index based on its spatial magnitude
         gs = numpy.divide(vs, dsi)
+        vector = numpy.multiply(indices_delta[numpy.argmax(gs)], self.grid.dx)
 
-        return numpy.max(gs)
+        ## TODO: Drone specific implementation for xy-plane
+        vector = numpy.array([vector[0], vector[2]])
+        if normalised:
+            n = numpy.linalg.norm(vector, ord=2)
+            if n == 0:
+                n = numpy.finfo(vector.dtype).eps
+            vector /= n
+        return vector
+
 

@@ -87,7 +87,7 @@ class Grid:
         ## Maximum index along each dimension
         self.index_min = numpy.zeros(self.dx.shape).flatten()
         ## TODO: Verify maximum index as len - 1
-        self.index_max = (self.x_max / self.dx).astype(int) - 1
+        self.index_max = numpy.divide(self.x_max - self.x_min, self.dx).astype(int) - 1
         self.N = self._initialise_field('N').astype(int)
 
         self.N_data = numpy.prod(self.N)
@@ -108,9 +108,11 @@ class Grid:
 
     def _index_in_grid(self, index):
         """ Return true if all elements satisfy grid resolution. """
-        print('Compare with: \t {} \n min: \t{}\n max: \t {}'.format(
-                index, self.index_min, self.index_max))
-        return (self.index_min <= index).all() and (index <= self.index_max).all()
+        #print('Compare with: \t {} \n min: \t{}\n max: \t {}'.format(
+        #        index, self.index_min, self.index_max))
+        #print('self.x_max:', self.x_max)
+        #print('self.dx:', self.dx)
+        return (self.index_min < index).all() and (index < self.index_max).all()
 
     def index_neighbours(self, index, axes : typing.List[int], return_offset=False):
         """ Return valid neighbours for specified axes. 
@@ -123,14 +125,31 @@ class Grid:
         ## TODO: Drone specific implementation (Use axis to generate pairing)
         # For each axis +1 and -1 each axis, 
         # then for all extend with next axis, etc.
+        ## Orthogonal neighbours
+        if False:
+            indices_offset = numpy.array([
+                                 [-1, 0, 0, 0],
+                                 [1, 0, 0, 0],
+                                 [0, 0, -1, 0],
+                                 [0, 0, 1, 0]])
+        ## Diagonal and orthogonal neighbours
         indices_offset = numpy.array([
                              [-1, 0, 0, 0],
                              [1, 0, 0, 0],
+                             [-1, 0, -1, 0],
+                             [1, 0, -1, 0],
+                             [-1, 0, 1, 0],
+                             [1, 0, 1, 0],
                              [0, 0, -1, 0],
-                             [0, 0, 1, 0]])
+                             [0, 0, 1, 0]
+                        ])
 
         indices = numpy.add(index, indices_offset)
         indices_mask = numpy.apply_along_axis(self._index_in_grid, arr=indices, axis=1)
+
+        ## Test if any neighbours have been found
+        if not indices_mask.any(): 
+            raise IndexHasNoValidNeighboursError()
 
         if return_offset:
             return indices[indices_mask], indices_offset[indices_mask]
@@ -181,6 +200,16 @@ class Grid:
         """ Return grid index of state rounded to next grid index. """
 
         return tuple(((x.ravel() - self.x_min) / self.dx).astype(int).flatten())
+
+    def index_valid(self, x : numpy.ndarray) -> tuple:
+        """ Return only valid indices that exist in current grid. """
+        index = self.index(x)
+
+        if not self._index_in_grid(index):
+            raise pylevel.error.IndexNotInGridError()
+
+        return index
+
 
     def state(self, index : numpy.ndarray) -> numpy.ndarray:
         """ Return state of grid index. """
