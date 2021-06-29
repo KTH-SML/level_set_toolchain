@@ -112,10 +112,10 @@ class Grid:
         #        index, self.index_min, self.index_max))
         #print('self.x_max:', self.x_max)
         #print('self.dx:', self.dx)
-        return (self.index_min < index).all() and (index < self.index_max).all()
+        return (self.index_min <= index).all() and (index <= self.index_max).all()
 
     def index_neighbours(self, index, axes : typing.List[int], return_offset=False):
-        """ Return valid neighbours for specified axes. 
+        """ Return valid neighbours for specified axes.
 
             Note:
                 Index should be one dimensional.
@@ -123,7 +123,7 @@ class Grid:
         """
 
         ## TODO: Drone specific implementation (Use axis to generate pairing)
-        # For each axis +1 and -1 each axis, 
+        # For each axis +1 and -1 each axis,
         # then for all extend with next axis, etc.
         ## Orthogonal neighbours
         if False:
@@ -148,7 +148,7 @@ class Grid:
         indices_mask = numpy.apply_along_axis(self._index_in_grid, arr=indices, axis=1)
 
         ## Test if any neighbours have been found
-        if not indices_mask.any(): 
+        if not indices_mask.any():
             raise IndexHasNoValidNeighboursError()
 
         if return_offset:
@@ -165,26 +165,11 @@ class Grid:
         print('Grid configuration:')
         print('Grid (min | max): ({} | {})'.format(self.x_min, self.x_max))
         print('Grid step size: ', self.dx[...])
+        print('Grid index (min | max): ({} | {})'.format(self.index_min, self.index_max))
 
         print('Complexity:')
         print('--> Dimension:', self.dim[...])
         print('--> Datapoints: ', self.N_data[...])
-
-    ## LEGACY
-    def _is_state_in_grid(self, x : numpy.ndarray) -> bool:
-        """ Return true if state is in discretisation range. 
-    
-            Note:
-                Unmaintained at the moment. Plesae revise before
-                usage.
-
-        """
-        if not numpy.isnan(numpy.sum(numpy.array(x))):
-            above_min = numpy.array(x) > numpy.array(self.x_min)
-            below_max = numpy.array(x) < numpy.array(self.x_max)
-            return above_min.all() and below_max.all()
-        else:
-            return False
 
     def _is_dimension_periodic(self, dim: None) ->  bool:
         """ Return if grid dimension is labeled periodic in MATLAB. """
@@ -206,6 +191,10 @@ class Grid:
         index = self.index(x)
 
         if not self._index_in_grid(index):
+            # Fail silently (see below for analysing new state set implementations)
+            # print('Received index request: ', index)
+            # print('Permitted (min | max): ({} | {})'.format(self.index_min, self.index_max))
+            # self.print_config()
             raise pylevel.error.IndexNotInGridError()
 
         return index

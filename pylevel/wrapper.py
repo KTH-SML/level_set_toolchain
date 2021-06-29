@@ -97,7 +97,7 @@ class ReachableSetWrapper:
     ## Time data
     # HDF5: /data/time dataset
     time = attr.ib(default=None, type=typing.Optional[typing.List[int]])
-    
+
     ## Maximal time to reach
     maximum_time_to_reach = attr.ib(default=None, type=typing.Optional[float])
 
@@ -426,16 +426,16 @@ class ReachableSetWrapper:
     def reach_at_t(self,
             t : float,
             convexified=True):
-        """ Return reachable set at time t. 
+        """ Return reachable set at time t.
 
             Note:
-                Optionally only return convexified reachable set for 
+                Optionally only return convexified reachable set for
                 visualisation purposes.
         """
         ts = numpy.array(self.time)
         t_idx = numpy.abs(ts - t).argmin()
-        
-        if t > self.time[-1]: 
+
+        if t > self.time[-1]:
             self._debug('State not reachable within time: {}'.format(
                 t))
             raise pylevel.errors.StateNotReachableError()
@@ -455,7 +455,7 @@ class ReachableSetWrapper:
         # Assume goal set is not avoid set
 
         for t_idx, time_i in enumerate(self.time):
-            self._debug('ReachableSetWrapper: Find min reach TTR at time index: {} at time {}s'.format(t_idx, time_i)) 
+            self._debug('ReachableSetWrapper: Find min reach TTR at time index: {} at time {}s'.format(t_idx, time_i))
             try:
                 state_set = self.group_subsets[str(t_idx)]
 
@@ -466,7 +466,7 @@ class ReachableSetWrapper:
                 if convexified:
                     state_set = self.group_subsets_convexified[str(t_idx)][...]
 
-                self._debug('ReachableSetWrapper: Min reach TTR state found in ', time_i) 
+                self._debug('ReachableSetWrapper: Min reach TTR state found in ', time_i)
 
                 return state_set, time_i
             except (LookupError, ValueError) as e:
@@ -474,13 +474,13 @@ class ReachableSetWrapper:
                 # import traceback
                 # self._debug(traceback.print_tb(e.__traceback__))
 
-        self._debug('ReachableSetWrapper: Failed to find index in any set.', 
+        self._debug('ReachableSetWrapper: Failed to find index in any set.',
             'Unreachable state.')
 
         raise pylevel.error.StateNotReachableError()
 
     def is_member(self, state: numpy.ndarray, return_time_to_reach=False) -> numpy.float:
-        """ Return if state is not member of any reachable state sets. """  
+        """ Return if state is not member of any reachable state sets. """
         index = self.grid.index_valid(state.flatten())
 
         for time_idx, time_i in enumerate(self.time):
@@ -499,30 +499,30 @@ class ReachableSetWrapper:
                 # self._debug("Failed to find index in {}".format(time_idx))
                 pass
 
-        self._debug('ReachableSetWrapper: Failed to find index in any set.') 
+        self._debug('ReachableSetWrapper: Failed to find index in any set.')
         raise pylevel.error.StateNotReachableError()
 
 
     def is_not_member(self, state: numpy.ndarray) -> numpy.float:
-        """ Return if state is not member of any reachable state sets. """  
+        """ Return if state is not member of any reachable state sets. """
 
         return not self.is_member(state)
 
-    def gradient(self, 
-            state: numpy.ndarray, 
+    def gradient(self,
+            state: numpy.ndarray,
             ttr : float,
             axes : typing.Optional[typing.List[int]] = None,
             normalised : bool = False) -> numpy.ndarray:
-        """ Return gradient of current state for specified axes. 
+        """ Return gradient of current state for specified axes.
 
             Note:
                 To only use directional information use the `normalised`
-                argument and return the gradient unit vector instead.    
+                argument and return the gradient unit vector instead.
 
         """
 
         ## TODO: Generating reach sets to debug
-        # Look up value function for grid 
+        # Look up value function for grid
         index = self.grid.index_valid(state)
 
         ## Current state value function
@@ -536,7 +536,7 @@ class ReachableSetWrapper:
                     index, axes=axes, return_offset=True)
         except IndexHasNoValidNeighboursError as e:
             return numpy.zeros((2, 1))
-            
+
         ## TODO: Remove me
         # print('--> Index ({}) has {} neighbours: \n{}\n'.format(
         #      index, len(indices), indices))
