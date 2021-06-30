@@ -216,9 +216,10 @@ class ReachableSetWrapper:
                 grid=grid,
                 data_handle=self.data_handle)
 
+        t0 = time.time()
         ## TODO: Check the time sequence (t0 to tf or flipped)
         for time_index, time_stamp in enumerate(self.time):
-            print('Compute level set at time: ', time_stamp)
+             print('{} - Compute level set at time: {}'.format(time.time() - t0, time_stamp))
             stamp = time.time()
             self._debug('Initialising time index {} of {}'.format(
                 time_index, len(self.time) - 1))
@@ -286,14 +287,22 @@ class ReachableSetWrapper:
             self._debug('States took : ', time.time() - ti)
 
             if True:
-                ti = time.time()
-                ## Generate 2D projection of states
-                print('Shape of states: ', states.shape)
-                states_sliced = numpy.hstack([
-                    states[:, [0]],
-                    states[:, [2]]])
+                try:
+                    ti = time.time()
+                    ## Generate 2D projection of states
+                    print('Shape of states: ', states.shape)
+                    states_sliced = numpy.hstack([
+                        states[:, [0]],
+                        states[:, [2]]])
 
-                hull = ConvexHull(states_sliced)
+                    hull = ConvexHull(states_sliced)
+                except Exception as e: 
+                    import matplotlib.pyplot as plt
+                    # plt.plot(states_sliced)
+                    plt.scatter(x=states_sliced[:,[0]],y=states_sliced[:,[1]])
+                    plt.show()
+                    print('Shape of states: ', states_sliced.shape)
+
 
                 #vertices = [hull.points[[i], :].reshape(-1, 1)
                 #                 for i in hull.vertices]
@@ -388,7 +397,7 @@ class ReachableSetWrapper:
                 debug_is_enabled=self.visualise_grid)
 
         ## Retrieve general data groups (ds, dt)
-        self.value_function = dask.array.from_array(data_handle['value_function']).transpose()
+        self.value_function = numpy.array(dask.array.from_array(data_handle['value_function']).transpose()))
         ## TBD: self.gradient = dask.array.from_array(data['gradient'])
         ## Available time discretisation indices
         time = dask.array.from_array(data_handle['time']).compute()

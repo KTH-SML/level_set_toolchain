@@ -332,10 +332,7 @@ class ReachableSetData:
                 non-strict sublevel set
 
         """
-        print(self.value_function.shape)
         return self.value_function  <= level
-        ## Get indices
-        # return dask.array.argwhere(self.value_function <= level)
 
     def sublevel_indices(self, level : float = 0.0,
             time_index : typing.Optional[int] = None) -> typing.List[tuple]:
