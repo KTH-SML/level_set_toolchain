@@ -498,7 +498,7 @@ class ReachableSetWrapper:
                 if not state_set[index]:
                     continue
 
-                print('Found member of ', self.state_set_type, ' (at time {})'.format(time_i))
+                # print('Found member of ', self.state_set_type, ' (at time {})'.format(time_i))
 
                 if return_time_to_reach:
                     return True, time_i

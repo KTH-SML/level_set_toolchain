@@ -9,6 +9,7 @@
 """
 import attr
 import enum
+import math
 import h5py
 import numpy
 import typing
@@ -87,7 +88,7 @@ class Grid:
         ## Maximum index along each dimension
         self.index_min = numpy.zeros(self.dx.shape).flatten()
         ## TODO: Verify maximum index as len - 1
-        self.index_max = numpy.divide(self.x_max - self.x_min, self.dx).astype(int) - 1
+        self.index_max = numpy.divide(self.x_max - self.x_min, self.dx).astype(int) 
         self.N = self._initialise_field('N').astype(int)
 
         self.N_data = numpy.prod(self.N)
@@ -184,7 +185,9 @@ class Grid:
     def index(self, x : numpy.ndarray) -> tuple:
         """ Return grid index of state rounded to next grid index. """
 
-        return tuple(((x.ravel() - self.x_min) / self.dx).astype(int).flatten())
+        index = (x.ravel() - self.x_min) / self.dx     
+
+        return tuple([math.ceil(idx) for idx in index]) 
 
     def index_valid(self, x : numpy.ndarray) -> tuple:
         """ Return only valid indices that exist in current grid. """
