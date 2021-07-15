@@ -187,7 +187,7 @@ class Grid:
 
         index = (x.ravel() - self.x_min) / self.dx     
 
-        return tuple([math.ceil(idx) for idx in index]) 
+        return tuple([(int(idx)) for idx in index]) 
 
     def index_valid(self, x : numpy.ndarray) -> tuple:
         """ Return only valid indices that exist in current grid. """
