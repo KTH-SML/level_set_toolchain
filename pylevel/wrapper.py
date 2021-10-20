@@ -2,7 +2,6 @@
 """ Level set wrapper providing convenience methods. """
 
 
-import os
 import sys
 import attr
 import dask
@@ -11,15 +10,9 @@ import time
 import h5py
 import numpy
 import pickle
-import sparse
 import typing
 import dask.array
-import hdf5storage
-import collections
 import dask.dataframe
-from scipy.io import loadmat
-from dask.delayed import delayed
-from dask.distributed import Client
 from scipy.spatial import ConvexHull
 
 
@@ -296,7 +289,7 @@ class ReachableSetWrapper:
                         states[:, [2]]])
 
                     hull = ConvexHull(states_sliced)
-                except Exception as e: 
+                except Exception as e:
                     import matplotlib.pyplot as plt
                     # plt.plot(states_sliced)
                     plt.scatter(x=states_sliced[:,[0]],y=states_sliced[:,[1]])
