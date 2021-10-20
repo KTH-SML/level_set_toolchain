@@ -88,7 +88,7 @@ class Grid:
         ## Maximum index along each dimension
         self.index_min = numpy.zeros(self.dx.shape).flatten()
         ## TODO: Verify maximum index as len - 1
-        self.index_max = numpy.divide(self.x_max - self.x_min, self.dx).astype(int) 
+        self.index_max = numpy.divide(self.x_max - self.x_min, self.dx).astype(int)
         self.N = self._initialise_field('N').astype(int)
 
         self.N_data = numpy.prod(self.N)
@@ -185,9 +185,9 @@ class Grid:
     def index(self, x : numpy.ndarray) -> tuple:
         """ Return grid index of state rounded to next grid index. """
 
-        index = (x.ravel() - self.x_min) / self.dx     
+        index = (x.ravel() - self.x_min) / self.dx
 
-        return tuple([(int(idx)) for idx in index]) 
+        return tuple([(int(idx)) for idx in index])
 
     def index_valid(self, x : numpy.ndarray) -> tuple:
         """ Return only valid indices that exist in current grid. """
@@ -258,11 +258,10 @@ class ReachableSetData:
 
         for i in range(g.dim):
             ## TODO: Update check on periodic dim
-            if g._is_dimension_periodic(i): #clunky...
-                ## TODO: Check if this has been run before and if
+            if g._is_dimension_periodic(i):
                 # tested remove exception
-                raise NotImplementedError()
-                g.vs[i] = numpy.append(g.vs[i], g.vs[i][-1] + g.dx[i])
+                # raise NotImplementedError()
+                g.vs[i][0] = numpy.append(g.vs[i][0], g.vs[i][0][-1] + g.dx[i])
 
                 # create correct concatenation to make axes i "periodic"
                 colon = slice(0, None)
@@ -271,14 +270,14 @@ class ReachableSetData:
                 colons[i] = 0 # used to be 1, should be 0, but check later
                 colons = tuple(colons)
 
-                aug_shape = list(self.data.shape)
+                aug_shape = list(self.value_function.shape)
                 aug_shape[i] = 1
                 aug_shape = tuple(aug_shape)
                 aug_dim_data = self.value_function[colons].reshape(aug_shape)
 
                 ## TODO: where is data used
                 self.value_function= numpy.concatenate(
-                        (self.data, aug_dim_data),
+                        (self.value_function, aug_dim_data),
                         axis = i)
 
     def _get_interpolated_value(self,
