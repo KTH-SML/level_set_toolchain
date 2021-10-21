@@ -419,7 +419,7 @@ class ReachableSetWrapper:
         if self.debug_is_enabled:
             print("LevelSetWrapper: ", *args)
 
-    def reach_at_t_idx(self, t_idx : int, convexified=True):
+    def reach_at_t_idx(self, t_idx : int, convexified=False):
         """ Return reachable state set at time_idx. """
         if convexified:
             return self.group_subsets_convexified[str(t_idx)][...]
@@ -427,7 +427,7 @@ class ReachableSetWrapper:
 
     def reach_at_t(self,
             t : float,
-            convexified=True):
+            convexified=False):
         """ Return reachable set at time t.
 
             Note:
