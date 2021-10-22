@@ -392,6 +392,7 @@ class ReachableSetWrapper:
         ## Retrieve general data groups (ds, dt)
         self.value_function = numpy.array(dask.array.from_array(data_handle['value_function']).transpose())
         ## TBD: self.gradient = dask.array.from_array(data['gradient'])
+        self.grad = numpy.gradient(self.value_function)
         ## Available time discretisation indices
         time = dask.array.from_array(data_handle['time']).compute()
         self.time = numpy.squeeze(numpy.array(time).flatten())
@@ -513,53 +514,72 @@ class ReachableSetWrapper:
     def gradient(self,
             state: numpy.ndarray,
             ttr : float,
-            axes : typing.Optional[typing.List[int]] = None,
-            normalised : bool = False) -> numpy.ndarray:
+            axis : int,
+            normalized : bool = False) -> numpy.ndarray:
         """ Return gradient of current state for specified axes.
-
-            Note:
-                To only use directional information use the `normalised`
-                argument and return the gradient unit vector instead.
-
         """
-
-        ## TODO: Generating reach sets to debug
-        # Look up value function for grid
         index = self.grid.index_valid(state)
-
-        ## Current state value function
         time_index = tuple(numpy.where(self.time == ttr)[0])
-        v = self.value_function[index + time_index]
+        grad = self.grad[axis][index + time_index]
+        if normalized:
+            if grad < 0.0:
+                most_negative_grad = numpy.min(self.grad[axis])
+                grad = grad / abs(most_negative_grad)
+            elif grad >0.0:
+                most_positive_grad = numpy.max(self.grad[axis])
+                grad = grad / most_positive_grad
+        return grad
 
-        try:
-            ## List of neighbor indices (4)
-            # Amount of indices times state space dim: di x ds
-            indices, indices_delta = self.grid.index_neighbours(
-                    index, axes=axes, return_offset=True)
-        except IndexHasNoValidNeighboursError as e:
-            return numpy.zeros((2, 1))
+    # def gradient_drone(self,
+            # state: numpy.ndarray,
+            # ttr : float,
+            # axes : typing.Optional[typing.List[int]] = None,
+            # normalised : bool = False) -> numpy.ndarray:
+        # """ Return gradient of current state for specified axes.
 
-        ## TODO: Remove me
-        # print('--> Index ({}) has {} neighbours: \n{}\n'.format(
-        #      index, len(indices), indices))
+            # Note:
+                # To only use directional information use the `normalised`
+                # argument and return the gradient unit vector instead.
 
-        ## di x 1 : scalar spatial magnitude for each index
-        dsi = numpy.linalg.norm(indices_delta * self.grid.dx, axis=1)
+        # """
 
-        ## di x 1 : value function differential for each index
-        vs = numpy.apply_along_axis(
-                lambda index: self.value_function[tuple(index) + time_index] - v, arr=indices, axis=1)
-        ## di x 1 / di x 1 : gradient for each index based on its spatial magnitude
-        gs = numpy.divide(vs, dsi)
-        vector = numpy.multiply(indices_delta[numpy.argmax(gs)], self.grid.dx)
+        # ## TODO: Generating reach sets to debug
+        # # Look up value function for grid
+        # index = self.grid.index_valid(state)
 
-        ## TODO: Drone specific implementation for xy-plane
-        vector = numpy.array([vector[0], vector[2]])
-        if normalised:
-            n = numpy.linalg.norm(vector, ord=2)
-            if n == 0:
-                n = numpy.finfo(vector.dtype).eps
-            vector /= n
-        return vector
+        # ## Current state value function
+        # time_index = tuple(numpy.where(self.time == ttr)[0])
+        # v = self.value_function[index + time_index]
+
+        # try:
+            # ## List of neighbor indices (4)
+            # # Amount of indices times state space dim: di x ds
+            # indices, indices_delta = self.grid.index_neighbours(
+                    # index, axes=axes, return_offset=True)
+        # except IndexHasNoValidNeighboursError as e:
+            # return numpy.zeros((2, 1))
+
+        # ## TODO: Remove me
+        # # print('--> Index ({}) has {} neighbours: \n{}\n'.format(
+        # #      index, len(indices), indices))
+
+        # ## di x 1 : scalar spatial magnitude for each index
+        # dsi = numpy.linalg.norm(indices_delta * self.grid.dx, axis=1)
+
+        # ## di x 1 : value function differential for each index
+        # vs = numpy.apply_along_axis(
+                # lambda index: self.value_function[tuple(index) + time_index] - v, arr=indices, axis=1)
+        # ## di x 1 / di x 1 : gradient for each index based on its spatial magnitude
+        # gs = numpy.divide(vs, dsi)
+        # vector = numpy.multiply(indices_delta[numpy.argmax(gs)], self.grid.dx)
+
+        # ## TODO: Drone specific implementation for xy-plane
+        # # vector = numpy.array([vector[0], vector[2]])
+        # # if normalised:
+            # # n = numpy.linalg.norm(vector, ord=2)
+            # # if n == 0:
+                # # n = numpy.finfo(vector.dtype).eps
+            # # vector /= n
+        # return vector
 
 
