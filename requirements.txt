@@ -2,4 +2,6 @@ dask
 attrs
 numpy
 typing
-
+scipy
+h5py
+hdf5storage
