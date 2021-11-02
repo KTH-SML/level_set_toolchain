@@ -447,7 +447,8 @@ class ReachableSetWrapper:
 
     def reach_at_min_ttr(self,
             state : numpy.ndarray,
-            convexified : bool=False):
+            convexified : bool=False,
+            return_set : bool=True):
         """ Return minimial time to reach set and its discretised time. """
 
         state_key = "states_convexified" if convexified else "states"
@@ -471,7 +472,10 @@ class ReachableSetWrapper:
 
                 self._debug('ReachableSetWrapper: Min reach TTR state found in ', time_i)
 
-                return state_set, time_i
+                if return_set:
+                    return state_set, time_i
+                else:
+                    return time_i
             except (LookupError, ValueError) as e:
                 pass
                 # import traceback
@@ -525,7 +529,7 @@ class ReachableSetWrapper:
             if grad < 0.0:
                 most_negative_grad = numpy.min(self.grad[axis])
                 grad = grad / abs(most_negative_grad)
-            elif grad >0.0:
+            elif grad > 0.0:
                 most_positive_grad = numpy.max(self.grad[axis])
                 grad = grad / most_positive_grad
         return grad
