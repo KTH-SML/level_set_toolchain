@@ -518,20 +518,20 @@ class ReachableSetWrapper:
     def gradient(self,
             state: numpy.ndarray,
             ttr : float,
-            axis : int,
-            normalized : bool = False) -> numpy.ndarray:
+            axis : int) -> numpy.ndarray:
         """ Return gradient of current state for specified axes.
         """
+        # TODO: normalized : bool = False)
         index = self.grid.index_valid(state)
         time_index = tuple(numpy.where(self.time == ttr)[0])
         grad = self.grad[axis][index + time_index]
-        if normalized:
-            if grad < 0.0:
-                most_negative_grad = numpy.min(self.grad[axis])
-                grad = grad / abs(most_negative_grad)
-            elif grad > 0.0:
-                most_positive_grad = numpy.max(self.grad[axis])
-                grad = grad / most_positive_grad
+        # if normalized:
+            # if grad < 0.0:
+                # most_negative_grad = numpy.min(self.grad[axis])
+                # grad = grad / abs(most_negative_grad)
+            # elif grad > 0.0:
+                # most_positive_grad = numpy.max(self.grad[axis])
+                # grad = grad / most_positive_grad
         return grad
 
     # def gradient_drone(self,
