@@ -101,6 +101,8 @@ class ReachableSetWrapper:
     ## List of datasets with sparse boolean arrays of convexified subsets
     group_subsets_convexified = attr.ib(default=None, type=typing.Optional[h5py.Group])
 
+    min_ttr_dataset = attr.ib(default=None, type=typing.Optional[h5py.Group])
+
     ## Grid utility object
     grid = attr.ib(default=None, type=typing.Optional[pylevel.data.Grid])
 
@@ -197,6 +199,7 @@ class ReachableSetWrapper:
         group_wrapper = self.group_wrapper
         group_subsets= self.group_subsets
         group_subsets_convexified = self.group_subsets_convexified
+        min_ttr_dataset = self.min_ttr_dataset
 
         self._debug('ReachableSetWrapper initialising data for {}'.format(
             group_wrapper.keys()))
@@ -208,6 +211,9 @@ class ReachableSetWrapper:
         state_set_data = pylevel.data.ReachableSetData(
                 grid=grid,
                 data_handle=self.data_handle)
+
+        ## Initialize min ttr dask array
+        min_ttr_darray = float("inf") * dask.array.ones(state_set_data.value_function.shape)
 
         t0 = time.time()
         ## TODO: Check the time sequence (t0 to tf or flipped)
@@ -233,6 +239,12 @@ class ReachableSetWrapper:
             ## Compute dask graph
             subset_data = subset_mask.compute()
             self._debug('Subset mask computation  took : ', time.time() - ti)
+
+            ## Compute current ttr dask array
+            ttr_darray = subset_mask
+            ttr_darray[ttr_darray == False] = float("inf")
+            ttr_darray[ttr_darray == True] = time_stamp
+            min_ttr_darray = dask.array.fmin(min_ttr_darray, ttr_darray)
 
             ## Skip empty level sets
             if not subset_data.any():
@@ -324,6 +336,7 @@ class ReachableSetWrapper:
                     plt.legend()
                     plt.pause(.1)
 
+
             ## TODO: Analyse size of data
             def get_size(element):
                 binary = pickle.dumps(element, protocol=4)
@@ -354,6 +367,16 @@ class ReachableSetWrapper:
                     #self.debug('------> Element: {} \t size: {}'.format(
                     #    e, sys.getsize
                     #    ))
+
+        ti = time.time()
+        min_ttr_array = min_ttr_darray.compute()
+        self._debug('Min TTR computation took : ', time.time() - ti)
+        min_ttr_data = min_ttr_dataset.require_dataset(
+                "min_ttr",
+                min_ttr_array.shape,
+                dtype='f',
+                compression='gzip')
+        min_ttr_data[...] = min_ttr_array
 
         self._debug('Has initialised: ', self.group_subsets.keys())
         self._debug('Has initialised: (convexified) ', self.group_subsets_convexified.keys())
@@ -414,6 +437,7 @@ class ReachableSetWrapper:
         ## For illustration purposes
         # same as above : convexified states
         self.group_subsets_convexified = self.group_wrapper.require_group("subsets_convexified")
+        self.min_ttr_dataset = self.group_wrapper.require_group("min_ttr")
 
     def _debug(self, *args):
         """ Print debug messages if debugging is enabled. """
@@ -447,8 +471,7 @@ class ReachableSetWrapper:
 
     def reach_at_min_ttr(self,
             state : numpy.ndarray,
-            convexified : bool=False,
-            return_set : bool=True):
+            convexified : bool=False):
         """ Return minimial time to reach set and its discretised time. """
 
         state_key = "states_convexified" if convexified else "states"
@@ -472,10 +495,7 @@ class ReachableSetWrapper:
 
                 self._debug('ReachableSetWrapper: Min reach TTR state found in ', time_i)
 
-                if return_set:
-                    return state_set, time_i
-                else:
-                    return time_i
+                return state_set, time_i
             except (LookupError, ValueError) as e:
                 pass
                 # import traceback
@@ -485,6 +505,15 @@ class ReachableSetWrapper:
             'Unreachable state.')
 
         raise pylevel.error.StateNotReachableError()
+
+    def min_ttr(self,
+                state : numpy.ndarray):
+        """ Return minimal time to reach discretized time.
+
+        This method is faster than reach_at_min_ttr, since it uses a
+        lookup table"""
+        index = self.grid.index_valid(state)
+        return self.min_ttr_dataset["min_ttr"][index]
 
     def is_member(self, state: numpy.ndarray, return_time_to_reach=False) -> numpy.float:
         """ Return if state is not member of any reachable state sets. """
@@ -509,7 +538,6 @@ class ReachableSetWrapper:
         self._debug('ReachableSetWrapper: Failed to find index in any set.')
         raise pylevel.error.StateNotReachableError()
 
-
     def is_not_member(self, state: numpy.ndarray) -> numpy.float:
         """ Return if state is not member of any reachable state sets. """
 
@@ -523,7 +551,7 @@ class ReachableSetWrapper:
         """
         # TODO: normalized : bool = False)
         index = self.grid.index_valid(state)
-        time_index = tuple(numpy.where(self.time == ttr)[0])
+        time_index = ((numpy.abs(self.time - ttr)).argmin(),)
         grad = self.grad[axis][index + time_index]
         # if normalized:
             # if grad < 0.0:
