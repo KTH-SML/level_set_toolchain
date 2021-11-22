@@ -236,7 +236,7 @@ class ReachableSetData:
 
     def __attrs_post_init__(self):
         self._initialise_data_reference()
-        self._extend_periodic_dimensions()
+        # self._extend_periodic_dimensions()
 
     def _initialise_data_reference(self):
         ## Initialise value_function with states of time index 0
