@@ -350,10 +350,13 @@ class ReachableSetData:
         """ Return states of sublevel of level set. """
         return self.value_function[mask]
 
+    def at_all_time(self):
+        return self.data_handle['value_function']
+
     def at_time(self, time_index):
         """ Create time index sliced dask array from HDF5 dataset handle. """
         ## This imports the value function in wrong shape => Transpose
-        vf = self.data_handle['value_function']
+        vf = self.at_all_time()
         self.value_function = dask.array.from_array(vf).transpose()[..., time_index]
 
     def debug(self, *args):
