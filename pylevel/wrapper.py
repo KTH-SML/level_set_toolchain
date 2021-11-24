@@ -24,6 +24,7 @@ __author__ = "Philipp Rothenhäusler"
 __email__ = "phirot@kth.se "
 __status__ = "Development"
 
+import pdb
 
 @attr.s
 class ReachableSetWrapper:
@@ -84,9 +85,6 @@ class ReachableSetWrapper:
             default=None,
             type=typing.Optional[typing.Dict[tuple, numpy.ndarray]])
 
-    ## Gradient data
-    # Todo...
-
     ## Time data
     # HDF5: /data/time dataset
     time = attr.ib(default=None, type=typing.Optional[typing.List[int]])
@@ -101,6 +99,10 @@ class ReachableSetWrapper:
     ## List of datasets with sparse boolean arrays of convexified subsets
     group_subsets_convexified = attr.ib(default=None, type=typing.Optional[h5py.Group])
 
+    ## Gradient data
+    grad_dataset = attr.ib(default=None, type=typing.Optional[h5py.Group])
+
+    ## Minimume time-to-reach data
     min_ttr_dataset = attr.ib(default=None, type=typing.Optional[h5py.Group])
 
     ## Grid utility object
@@ -199,6 +201,7 @@ class ReachableSetWrapper:
         group_wrapper = self.group_wrapper
         group_subsets= self.group_subsets
         group_subsets_convexified = self.group_subsets_convexified
+        grad_dataset = self.grad_dataset
         min_ttr_dataset = self.min_ttr_dataset
 
         self._debug('ReachableSetWrapper initialising data for {}'.format(
@@ -211,6 +214,19 @@ class ReachableSetWrapper:
         state_set_data = pylevel.data.ReachableSetData(
                 grid=grid,
                 data_handle=self.data_handle)
+
+        ## Compute and store gradient
+        ti = time.time()
+        vf = dask.array.from_array(state_set_data.at_all_time()).transpose()
+        grad = numpy.array([gradient.compute()
+                            for gradient in dask.array.gradient(vf)])
+        self._debug('Gradient computation took : ', time.time() - ti)
+        grad_data = grad_dataset.require_dataset(
+                "grad",
+                grad.shape,
+                dtype='f',
+                compression='gzip')
+        grad_data[...] = grad
 
         ## Initialize min ttr dask array
         min_ttr_darray = float("inf") * dask.array.ones(state_set_data.value_function.shape)
@@ -415,10 +431,10 @@ class ReachableSetWrapper:
         ## Retrieve general data groups (ds, dt)
         self.value_function = numpy.array(dask.array.from_array(data_handle['value_function']).transpose())
         ## TBD: self.gradient = dask.array.from_array(data['gradient'])
-        self.grad = numpy.gradient(self.value_function)
+        # self.grad = numpy.gradient(self.value_function)
         ## Available time discretisation indices
-        time = dask.array.from_array(data_handle['time']).compute()
-        self.time = numpy.squeeze(numpy.array(time).flatten())
+        time_array = dask.array.from_array(data_handle['time']).compute()
+        self.time = numpy.squeeze(numpy.array(time_array).flatten())
 
         ## Ensure time is increasing with indices
         if self.time[0] > self.time[-1]:
@@ -426,7 +442,6 @@ class ReachableSetWrapper:
 
         ## TODO: Find maximal ttr that is computed
         self.maximum_time_to_reach = self.time[-1]
-
         ## Initialise wrapper specific data groups
         ## Create wrapper data group to add datasets
         self.group_wrapper = data_handle.require_group("wrapper")
@@ -438,6 +453,10 @@ class ReachableSetWrapper:
         # same as above : convexified states
         self.group_subsets_convexified = self.group_wrapper.require_group("subsets_convexified")
         self.min_ttr_dataset = self.group_wrapper.require_group("min_ttr")
+        self.grad_dataset = self.group_wrapper.require_group("grad")
+
+        self.ttr = self.min_ttr_dataset["min_ttr"]
+        self.grad = self.grad_dataset["grad"]
 
     def _debug(self, *args):
         """ Print debug messages if debugging is enabled. """
@@ -463,9 +482,8 @@ class ReachableSetWrapper:
         t_idx = numpy.abs(ts - t).argmin()
 
         if t > self.time[-1]:
-            self._debug('State not reachable within time: {}'.format(
-                t))
-            raise pylevel.errors.StateNotReachableError()
+            self._debug('State not reachable within time: {}'.format(t))
+            raise pylevel.error.StateNotReachableError()
 
         return self.reach_at_t_idx(t_idx, convexified)
 
@@ -506,14 +524,13 @@ class ReachableSetWrapper:
 
         raise pylevel.error.StateNotReachableError()
 
-    def min_ttr(self,
-                state : numpy.ndarray):
+    def min_ttr(self, state : numpy.ndarray):
         """ Return minimal time to reach discretized time.
 
         This method is faster than reach_at_min_ttr, since it uses a
         lookup table"""
         index = self.grid.index_valid(state)
-        return self.min_ttr_dataset["min_ttr"][index]
+        return self.ttr[index]
 
     def is_member(self, state: numpy.ndarray, return_time_to_reach=False) -> numpy.float:
         """ Return if state is not member of any reachable state sets. """
@@ -550,9 +567,11 @@ class ReachableSetWrapper:
         """ Return gradient of current state for specified axes.
         """
         # TODO: normalized : bool = False)
+        axis = ((axis), )
         index = self.grid.index_valid(state)
         time_index = ((numpy.abs(self.time - ttr)).argmin(),)
-        grad = self.grad[axis][index + time_index]
+        grad = self.grad[axis+index+time_index]
+        # grad = self.grad[axis][index + time_index]
         # if normalized:
             # if grad < 0.0:
                 # most_negative_grad = numpy.min(self.grad[axis])
