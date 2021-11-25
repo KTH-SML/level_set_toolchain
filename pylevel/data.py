@@ -181,12 +181,24 @@ class Grid:
         if self.debug_is_enabled:
             print("LevelSetWrapper: ", *args)
 
+    def _handle_periodic(self, x : numpy.ndarray) -> numpy.ndarray:
+        """ Return state x but with periodic values mapped to gridded region """
+        for i, value in enumerate(x):
+            if self._is_dimension_periodic(i):
+                period = max(self.vs[i]) - min(self.vs[i])
+                period = self.x_max[i] - self.x_min[i]
+                if x[i] < self.x_min[i]:
+                    while x[i] < self.x_min[i]:
+                        x[i] += period
+                if x[i] > self.x_max[i]:
+                    while x[i] > self.x_max[i]:
+                        x[i] -= period
+        return x
 
     def index(self, x : numpy.ndarray) -> tuple:
         """ Return grid index of state rounded to next grid index. """
-
+        x = self._handle_periodic(x)
         index = (x.ravel() - self.x_min) / self.dx
-
         return tuple([(int(idx)) for idx in index])
 
     def index_valid(self, x : numpy.ndarray) -> tuple:
