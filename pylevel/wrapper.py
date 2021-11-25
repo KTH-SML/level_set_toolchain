@@ -92,6 +92,10 @@ class ReachableSetWrapper:
     ## Maximal time to reach
     maximum_time_to_reach = attr.ib(default=None, type=typing.Optional[float])
 
+    ttr = attr.ib(default=None, type=typing.Optional[h5py.Group])
+
+    grad = attr.ib(default=None, type=typing.Optional[h5py.Group])
+
     ## Massaged data groups (of datasets)
     group_wrapper = attr.ib(default=None, type=typing.Optional[h5py.Group])
     ## List of datasets with sparse boolean arrays
@@ -151,6 +155,10 @@ class ReachableSetWrapper:
         ## Initialise common data handles
         self._activate_data_handles()
 
+        ## Pre-access some data
+        self.ttr = self.min_ttr_dataset["min_ttr"]
+        self.grad = self.grad_dataset["grad"]
+
         ## Fetch meta data from data group
         self.is_initialised = self.data_handle.attrs.get(
                 'is_initialised', False)
@@ -179,8 +187,13 @@ class ReachableSetWrapper:
             data.attrs['timestamp_initialisation']))
         ## Close file
         self.file_handle.close()
+
         ## Reopen saved file
         self._activate_data_handles()
+
+        ## Pre-access some data
+        self.ttr = self.min_ttr_dataset["min_ttr"]
+        self.grad = self.grad_dataset["grad"]
 
     def _initialise_sets(self):
         """ Iterate over discretised time and initialise corresponding ttr.
@@ -455,8 +468,6 @@ class ReachableSetWrapper:
         self.min_ttr_dataset = self.group_wrapper.require_group("min_ttr")
         self.grad_dataset = self.group_wrapper.require_group("grad")
 
-        self.ttr = self.min_ttr_dataset["min_ttr"]
-        self.grad = self.grad_dataset["grad"]
 
     def _debug(self, *args):
         """ Print debug messages if debugging is enabled. """
