@@ -53,7 +53,7 @@ classdef SVEABicycle < DynSys
       end
       
       if nargin < 5
-        dMax = [0.1; 0.1; pi/15; 0.3]; %
+        dMax = [0; 0; 0; 0.0]; %
       end
             
       if nargin < 6
