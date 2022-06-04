@@ -1,4 +1,4 @@
-function uOpt = optCtrl(obj, ~, ~, deriv, uMode)
+function uOpt = optCtrl(obj, ~, x, deriv, uMode)
 % uOpt = optCtrl(obj, t, y, deriv, uMode)
 
 %% Input processing
@@ -14,8 +14,11 @@ end
 if strcmp(uMode, 'max')
 
   if any(obj.dims == 3) % heading
-    uOpt{1} = (deriv{obj.dims==3}>=0)*obj.sMax + ...
-      (deriv{obj.dims==3}<0)*(-obj.sMax);
+    uOpt{1} = ...
+      (x{obj.dims==4}>=0).*(deriv{obj.dims==3}>=0)*obj.sMax + ...
+      (x{obj.dims==4}>=0).*(deriv{obj.dims==3}<0)*(-obj.sMax) + ...
+      (x{obj.dims==4}<0).*(deriv{obj.dims==3}>=0)*(-obj.sMax) + ...
+      (x{obj.dims==4}<0).*(deriv{obj.dims==3}<0)*obj.sMax;
   end
 
   if any(obj.dims == 4) % velocity
@@ -26,8 +29,11 @@ if strcmp(uMode, 'max')
 elseif strcmp(uMode, 'min')
 
   if any(obj.dims == 3) % heading
-    uOpt{1} = (deriv{obj.dims==3}>=0)*(-obj.sMax) + ...
-      (deriv{obj.dims==3}<0)*obj.sMax;
+    uOpt{1} = ...
+      (x{obj.dims==4}>=0).*(deriv{obj.dims==3}>=0)*(-obj.sMax) + ...
+      (x{obj.dims==4}>=0).*(deriv{obj.dims==3}<0)*obj.sMax + ...
+      (x{obj.dims==4}<0).*(deriv{obj.dims==3}>=0)*obj.sMax + ...
+      (x{obj.dims==4}<0).*(deriv{obj.dims==3}<0)*(-obj.sMax);
   end
 
   if any(obj.dims == 4) % velocity
