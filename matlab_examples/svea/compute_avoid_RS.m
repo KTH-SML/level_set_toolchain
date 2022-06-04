@@ -2,12 +2,12 @@
 clear
 
 %% General Parameters
-save_path = '/home/fjiang/Projects/MATLAB/Experiments/SML_level_set/cached_rs/svea/';
-params.sMax = pi/4; % Steering limit (assumed symmetric)
-params.aMax = 1.5; % Max accel
+save_path = './';
+params.sMax = pi/5; % Steering limit (assumed symmetric)
+params.aMax = 1.0; % Max accel
 params.aMin = -1.0; % Min accel, good to be conservative for safer braking
 params.isBackwards = true; % BRS or FRS (FRS requires more parameter changes below)
-params.makeVideo = true;
+params.makeVideo = false;
 
 % Desired resolution of grid [x, y, theta, v]
 resolution = [0.1 0.1 pi/15 0.4];
@@ -16,7 +16,7 @@ resolution = [0.1 0.1 pi/15 0.4];
 % Create grid
 max_v = 3.6;
 g_min = [-2.5, -1, -pi, -max_v];
-g_max = [1, 1, pi, max_v];
+g_max = [2.5, 1, pi, max_v];
 g_N = N_from_resolution(g_min, g_max, resolution);
 g = createGrid(g_min, g_max, g_N, 3);
 
@@ -25,8 +25,8 @@ params.figNum = 1;
 params.T = 2; % time horizon
 params.g = g;
 %params.target = shapeCylinder(g, [3, 4], [0; 0; 0; 0], 0.4);
-params.target = shapeRectangleByCorners(g, [-0.6, -0.20, -inf, -inf], ...
-                                           [ 0.1,  0.20,  inf,  inf]);
+params.target = shapeRectangleByCorners(g, [-0.5, -0.20, -inf, -inf], ...
+                                           [ 0.5,  0.20,  inf,  inf]);
 params.is_avoid = true;
 params.is_avoid_colors = true;
 params.isTube = true;

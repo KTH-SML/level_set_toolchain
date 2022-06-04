@@ -101,7 +101,7 @@ end
 % Put grid and dynamic systems into schemeData
 schemeData.grid = g;
 schemeData.dynSys = sCar;
-schemeData.accuracy = 'low'; %set accuracy
+schemeData.accuracy = 'high'; %set accuracy
 schemeData.uMode = uMode;
 schemeData.dMode = dMode;
 

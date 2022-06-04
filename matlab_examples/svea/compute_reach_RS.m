@@ -2,31 +2,30 @@
 clear
 
 %% General Parameters
-save_path = '/home/fjiang/Projects/MATLAB/Experiments/SML_level_set/cached_rs/svea/';
+save_path = './';
 params.sMax = pi/5; % Steering limit (assumed symmetric)
-params.aMax = 1.5; % Max accel
-params.aMin = -1.0; % Min accel, good to be conservative for safer braking
+params.aMax = 1; % Max accel
+params.aMin = -1; % Min accel, good to be conservative for safer braking
 params.isBackwards = true; % BRS or FRS (FRS requires more parameter changes below)
-params.makeVideo = true;
+params.makeVideo = false;
 
 % Desired resolution of grid [x, y, theta, v]
-resolution = [0.05 0.05 pi/20 0.1];
+resolution = [0.2 0.2 pi/10 0.1];
 % Note, these resolutions should be smaller than the target regions
 
 % Create grid
-max_v = 1.5;
+max_v = 1;
 g_min = [-3, -2, -pi, -max_v];
-g_max = [1.5, 2, pi, max_v];
+g_max = [3, 2, pi, max_v];
 g_N = N_from_resolution(g_min, g_max, resolution);
 g = createGrid(g_min, g_max, g_N, 3);
 
 %% Backward Reachable Set
 params.figNum = 1;
-params.T = 5; % time horizon
+params.T = 2; % time horizon
 params.g = g;
-params.target = shapeCylinder(g, [3, 4], [0; 0; 0; 0], 0.2);
+params.target = shapeCylinder(g, [3, 4], [0; 0; 0; 0], 0.5);
 params.is_reach_colors = true;
-params.stop_converge = true;
 params.isTube = false;
 params.videoFilename = [save_path 'reach_BRS'];
 [~, val_data, time_vec] = svea_RS(params);
