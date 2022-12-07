@@ -155,15 +155,16 @@ class ReachableSetWrapper:
         ## Initialise common data handles
         self._activate_data_handles()
 
-        ## Pre-access some data
-        self.ttr = self.min_ttr_dataset["min_ttr"]
-        self.grad = self.grad_dataset["grad"]
-
         ## Fetch meta data from data group
         self.is_initialised = self.data_handle.attrs.get(
                 'is_initialised', False)
         self.timestamp_initialisation = self.data_handle.attrs.get(
                 'timestamp_initialisation', None)
+
+        if self.is_initialised:
+            ## Pre-access some data
+            self.ttr = self.min_ttr_dataset["min_ttr"]
+            self.grad = self.grad_dataset["grad"]
 
         print('Is initialised: ', self.is_initialised)
         print('Force initialisation: ', self.force_initialisation)
