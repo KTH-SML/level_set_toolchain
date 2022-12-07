@@ -199,7 +199,7 @@ class Grid:
         """ Return grid index of state rounded to next grid index. """
         x = self._handle_periodic(x)
         index = (x.ravel() - self.x_min) / self.dx
-        return tuple([(int(idx)) for idx in index])
+        return tuple([(round(idx)) for idx in index])
 
     def index_valid(self, x : numpy.ndarray) -> tuple:
         """ Return only valid indices that exist in current grid. """
