@@ -56,8 +56,6 @@ This allows you to use latest code changes without repeated installation through
 
 The API documentation of the Python wrapper can be found [here](https://kth-sml.github.io/level_set_toolchain/).
 
-_Note: For all set retrieval methods it is possible to specify the `convexified=True` argument to receive only the vertices of the level sets convex hull for convenient visualisation of the corresponding sets._
-
 You can find some basic examples of how to use the `pylevel` package under `./scripts`. This includes access of reachable sets at a specified time or for example the usage of the import and export feature avoiding repeated initialisation.
 
 
