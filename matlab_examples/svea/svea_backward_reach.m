@@ -2,12 +2,15 @@
 clear
 
 %% General Parameters
-save_path = './';
+save_path = store_under('svea');
 params.sMax = pi/5; % Steering limit (assumed symmetric)
 params.aMax = 1; % Max accel
 params.aMin = -1; % Min accel, good to be conservative for safer braking
-params.isBackwards = true; % BRS or FRS (FRS requires more parameter changes below)
+params.isBackwards = true;
 params.makeVideo = false;
+% video recording only works on Windows or MacOS
+% alternatively remove 'MPEG-4' in VideoWriter(extraArgs.videoFilename,'MPEG-4')
+% in HJIPDE_solve in helperOC
 
 % Desired resolution of grid [x, y, theta, v]
 resolution = [0.2 0.2 pi/10 0.1];
@@ -27,16 +30,8 @@ params.g = g;
 params.target = shapeCylinder(g, [3, 4], [0; 0; 0; 0], 0.5);
 params.is_reach_colors = true;
 params.isTube = false;
-params.videoFilename = [save_path 'reach_BRS'];
-[~, val_data, time_vec] = svea_RS(params);
+params.videoFilename = [save_path 'svea_reach'];
+reach_data = svea_RS(params);
 
-%% Save RS and other useful data
-
-% Save full reachable set solution
-data_save_path = [save_path 'RS'];
-save(data_save_path, 'g', 'val_data', 'time_vec');
-
-% Save just min time-to-reach, and gradients needed for control
-[TTR, grad_theta, grad_v] = extract_useful(g, val_data, time_vec);
-data_save_path = [save_path 'TTR_and_grad'];
-save(data_save_path, 'g', 'TTR', 'grad_theta', 'grad_v')
+%% Save RS
+export_to_mat(save_path, 'svea_reach', reach_data);
