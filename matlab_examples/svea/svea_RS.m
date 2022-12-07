@@ -1,4 +1,4 @@
-function [g, data, tau2] = svea_RS(params)
+function data = svea_RS(params)
 
 % TODO: clean up this list
 % Current possible params:
@@ -11,7 +11,7 @@ function [g, data, tau2] = svea_RS(params)
 t0 = 0;
 tMax = params.T;
 dt = 0.05;
-tau = t0:dt:tMax;
+time_vector = t0:dt:tMax;
 
 % Target set
 R = 0.2;
@@ -34,9 +34,9 @@ if isfield(params, 'isBackwards') && params.isBackwards % BRS
     end
     
     if isfield(params, 'target')
-        data0 = params.target;
+        initial_vf = params.target;
     else
-        data0 = shapeCylinder(g, [], [0; 0; 0; 0], R); % creates sphere
+        initial_vf = shapeCylinder(g, [], [0; 0; 0; 0], R); % creates sphere
     end
     
     if isfield(params, 'is_boundary_avoid') && params.is_boundary_avoid
@@ -49,10 +49,10 @@ if isfield(params, 'isBackwards') && params.isBackwards % BRS
             [-Inf, -Inf, -Inf, -Inf], [Inf, grid_min(2)+0.32, Inf, Inf]);
         boundary3 = shapeRectangleByCorners(g, ...
             [-Inf, grid_max(2)-0.32, -Inf, -Inf], [Inf, Inf, Inf, Inf]);
-        data0 = min(min(min(boundary0, boundary1), boundary2), boundary3);
+        initial_vf = min(min(min(boundary0, boundary1), boundary2), boundary3);
         
         if isfield(params, 'target')
-            data0 = min(data0, params.target);
+            initial_vf = min(initial_vf, params.target);
         end
     end
     
@@ -73,16 +73,17 @@ else % FRS
     end
     
     uMode = 'max';
+    dMode = 'min';
     schemeData.tMode = 'forward'; %for FRS
     
     if isfield(params, 'target')
-        data0 = params.target;
+        initial_vf = params.target;
     else
-        data0 = shapeCylinder(g, [], [0; 0; 0; 0], R); % creates sphere
+        initial_vf = shapeCylinder(g, [], [0; 0; 0; 0], R); % creates sphere
     end
 end
 
-HJIextraArgs.targetFunction = data0;
+HJIextraArgs.targetFunction = initial_vf;
 
 if isfield(params, 'obstacle')
     HJIextraArgs.obstacleFunction = params.obstacle;
@@ -101,7 +102,7 @@ end
 % Put grid and dynamic systems into schemeData
 schemeData.grid = g;
 schemeData.dynSys = sCar;
-schemeData.accuracy = 'low'; %set accuracy
+schemeData.accuracy = 'high'; %set accuracy
 schemeData.uMode = uMode;
 schemeData.dMode = dMode;
 
@@ -142,7 +143,11 @@ end
 
 HJIextraArgs.quiet = true;
 
-[data, tau2, ~] = ...
-  HJIPDE_solve(data0, tau, schemeData, mode, HJIextraArgs);
-end
+[vf, time, ~] = ...
+  HJIPDE_solve(initial_vf, time_vector, schemeData, mode, HJIextraArgs);
 
+data.grid = g;
+data.value_function = vf;
+data.time = time;
+
+end

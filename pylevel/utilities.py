@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """ Utility functions for level set wrapper.
-
 """
 
 import numpy
@@ -17,8 +16,23 @@ __email__ = "fjiang@kth.se "
 __status__ = "Development"
 
 
-def visualise_2d(wrapper, states, time,
-        show=True, show_image=False, **plot_options):
+def visualize_XY(wrapper, states, time,
+                 show=True, **plot_options):
+    options = dict(cmap="red", alpha=0.3)
+    options.update(plot_options)
+
+    t_str = "t={} [s]".format(numpy.around(time,2))
+    plt.title("Backward Reach Set at " + t_str)
+    plt.xlabel("x [m]")
+    plt.ylabel("y [m]")
+    plt.imshow(states.T, **options)
+    plt.gca().invert_yaxis()
+
+    if show:
+        show_plots()
+
+def visualize_hull_XY(wrapper, states, time,
+                      show=True, show_image=False, **plot_options):
     grid = wrapper.grid
     options = dict(c=numpy.random.rand(3,),linewidth=3, alpha=0.3)
     options.update(plot_options)

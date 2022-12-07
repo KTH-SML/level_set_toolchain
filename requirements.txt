@@ -1,5 +1,9 @@
 dask
+dask[array]==1.14.0
+dask[dataframe]==1.14.0
 attrs
 numpy
 typing
-
+scipy
+h5py
+hdf5storage

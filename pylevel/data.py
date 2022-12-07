@@ -88,7 +88,7 @@ class Grid:
         ## Maximum index along each dimension
         self.index_min = numpy.zeros(self.dx.shape).flatten()
         ## TODO: Verify maximum index as len - 1
-        self.index_max = numpy.divide(self.x_max - self.x_min, self.dx).astype(int) 
+        self.index_max = numpy.divide(self.x_max - self.x_min, self.dx).astype(int)
         self.N = self._initialise_field('N').astype(int)
 
         self.N_data = numpy.prod(self.N)
@@ -181,13 +181,25 @@ class Grid:
         if self.debug_is_enabled:
             print("LevelSetWrapper: ", *args)
 
+    def _handle_periodic(self, x : numpy.ndarray) -> numpy.ndarray:
+        """ Return state x but with periodic values mapped to gridded region """
+        for i, value in enumerate(x):
+            if self._is_dimension_periodic(i):
+                period = max(self.vs[i]) - min(self.vs[i])
+                period = self.x_max[i] - self.x_min[i]
+                if x[i] < self.x_min[i]:
+                    while x[i] < self.x_min[i]:
+                        x[i] += period
+                if x[i] > self.x_max[i]:
+                    while x[i] > self.x_max[i]:
+                        x[i] -= period
+        return x
 
     def index(self, x : numpy.ndarray) -> tuple:
         """ Return grid index of state rounded to next grid index. """
-
-        index = (x.ravel() - self.x_min) / self.dx     
-
-        return tuple([(int(idx)) for idx in index]) 
+        x = self._handle_periodic(x)
+        index = (x.ravel() - self.x_min) / self.dx
+        return tuple([(round(idx)) for idx in index])
 
     def index_valid(self, x : numpy.ndarray) -> tuple:
         """ Return only valid indices that exist in current grid. """
@@ -236,7 +248,7 @@ class ReachableSetData:
 
     def __attrs_post_init__(self):
         self._initialise_data_reference()
-        self._extend_periodic_dimensions()
+        # self._extend_periodic_dimensions()
 
     def _initialise_data_reference(self):
         ## Initialise value_function with states of time index 0
@@ -258,11 +270,10 @@ class ReachableSetData:
 
         for i in range(g.dim):
             ## TODO: Update check on periodic dim
-            if g._is_dimension_periodic(i): #clunky...
-                ## TODO: Check if this has been run before and if
+            if g._is_dimension_periodic(i):
                 # tested remove exception
-                raise NotImplementedError()
-                g.vs[i] = numpy.append(g.vs[i], g.vs[i][-1] + g.dx[i])
+                # raise NotImplementedError()
+                g.vs[i][0] = numpy.append(g.vs[i][0], g.vs[i][0][-1] + g.dx[i])
 
                 # create correct concatenation to make axes i "periodic"
                 colon = slice(0, None)
@@ -271,14 +282,14 @@ class ReachableSetData:
                 colons[i] = 0 # used to be 1, should be 0, but check later
                 colons = tuple(colons)
 
-                aug_shape = list(self.data.shape)
+                aug_shape = list(self.value_function.shape)
                 aug_shape[i] = 1
                 aug_shape = tuple(aug_shape)
                 aug_dim_data = self.value_function[colons].reshape(aug_shape)
 
                 ## TODO: where is data used
                 self.value_function= numpy.concatenate(
-                        (self.data, aug_dim_data),
+                        (self.value_function, aug_dim_data),
                         axis = i)
 
     def _get_interpolated_value(self,
@@ -351,10 +362,13 @@ class ReachableSetData:
         """ Return states of sublevel of level set. """
         return self.value_function[mask]
 
+    def at_all_time(self):
+        return self.data_handle['value_function']
+
     def at_time(self, time_index):
         """ Create time index sliced dask array from HDF5 dataset handle. """
         ## This imports the value function in wrong shape => Transpose
-        vf = self.data_handle['value_function']
+        vf = self.at_all_time()
         self.value_function = dask.array.from_array(vf).transpose()[..., time_index]
 
     def debug(self, *args):

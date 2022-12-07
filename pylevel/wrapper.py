@@ -2,7 +2,6 @@
 """ Level set wrapper providing convenience methods. """
 
 
-import os
 import sys
 import attr
 import dask
@@ -11,15 +10,9 @@ import time
 import h5py
 import numpy
 import pickle
-import sparse
 import typing
 import dask.array
-import hdf5storage
-import collections
 import dask.dataframe
-from scipy.io import loadmat
-from dask.delayed import delayed
-from dask.distributed import Client
 from scipy.spatial import ConvexHull
 
 
@@ -31,6 +24,7 @@ __author__ = "Philipp Rothenhäusler"
 __email__ = "phirot@kth.se "
 __status__ = "Development"
 
+import pdb
 
 @attr.s
 class ReachableSetWrapper:
@@ -91,9 +85,6 @@ class ReachableSetWrapper:
             default=None,
             type=typing.Optional[typing.Dict[tuple, numpy.ndarray]])
 
-    ## Gradient data
-    # Todo...
-
     ## Time data
     # HDF5: /data/time dataset
     time = attr.ib(default=None, type=typing.Optional[typing.List[int]])
@@ -101,12 +92,22 @@ class ReachableSetWrapper:
     ## Maximal time to reach
     maximum_time_to_reach = attr.ib(default=None, type=typing.Optional[float])
 
+    ttr = attr.ib(default=None, type=typing.Optional[h5py.Group])
+
+    grad = attr.ib(default=None, type=typing.Optional[h5py.Group])
+
     ## Massaged data groups (of datasets)
     group_wrapper = attr.ib(default=None, type=typing.Optional[h5py.Group])
     ## List of datasets with sparse boolean arrays
     group_subsets = attr.ib(default=None, type=typing.Optional[h5py.Group])
     ## List of datasets with sparse boolean arrays of convexified subsets
     group_subsets_convexified = attr.ib(default=None, type=typing.Optional[h5py.Group])
+
+    ## Gradient data
+    grad_dataset = attr.ib(default=None, type=typing.Optional[h5py.Group])
+
+    ## Minimume time-to-reach data
+    min_ttr_dataset = attr.ib(default=None, type=typing.Optional[h5py.Group])
 
     ## Grid utility object
     grid = attr.ib(default=None, type=typing.Optional[pylevel.data.Grid])
@@ -160,6 +161,11 @@ class ReachableSetWrapper:
         self.timestamp_initialisation = self.data_handle.attrs.get(
                 'timestamp_initialisation', None)
 
+        if self.is_initialised:
+            ## Pre-access some data
+            self.ttr = self.min_ttr_dataset["min_ttr"]
+            self.grad = self.grad_dataset["grad"]
+
         print('Is initialised: ', self.is_initialised)
         print('Force initialisation: ', self.force_initialisation)
 
@@ -182,8 +188,13 @@ class ReachableSetWrapper:
             data.attrs['timestamp_initialisation']))
         ## Close file
         self.file_handle.close()
+
         ## Reopen saved file
         self._activate_data_handles()
+
+        ## Pre-access some data
+        self.ttr = self.min_ttr_dataset["min_ttr"]
+        self.grad = self.grad_dataset["grad"]
 
     def _initialise_sets(self):
         """ Iterate over discretised time and initialise corresponding ttr.
@@ -204,6 +215,8 @@ class ReachableSetWrapper:
         group_wrapper = self.group_wrapper
         group_subsets= self.group_subsets
         group_subsets_convexified = self.group_subsets_convexified
+        grad_dataset = self.grad_dataset
+        min_ttr_dataset = self.min_ttr_dataset
 
         self._debug('ReachableSetWrapper initialising data for {}'.format(
             group_wrapper.keys()))
@@ -215,6 +228,22 @@ class ReachableSetWrapper:
         state_set_data = pylevel.data.ReachableSetData(
                 grid=grid,
                 data_handle=self.data_handle)
+
+        ## Compute and store gradient
+        ti = time.time()
+        vf = dask.array.from_array(state_set_data.at_all_time()).transpose()
+        grad = numpy.array([gradient.compute()
+                            for gradient in dask.array.gradient(vf)])
+        self._debug('Gradient computation took : ', time.time() - ti)
+        grad_data = grad_dataset.require_dataset(
+                "grad",
+                grad.shape,
+                dtype='f',
+                compression='gzip')
+        grad_data[...] = grad
+
+        ## Initialize min ttr dask array
+        min_ttr_darray = float("inf") * dask.array.ones(state_set_data.value_function.shape)
 
         t0 = time.time()
         ## TODO: Check the time sequence (t0 to tf or flipped)
@@ -240,6 +269,12 @@ class ReachableSetWrapper:
             ## Compute dask graph
             subset_data = subset_mask.compute()
             self._debug('Subset mask computation  took : ', time.time() - ti)
+
+            ## Compute current ttr dask array
+            ttr_darray = subset_mask
+            ttr_darray[ttr_darray == False] = float("inf")
+            ttr_darray[ttr_darray == True] = time_stamp
+            min_ttr_darray = dask.array.fmin(min_ttr_darray, ttr_darray)
 
             ## Skip empty level sets
             if not subset_data.any():
@@ -296,7 +331,7 @@ class ReachableSetWrapper:
                         states[:, [2]]])
 
                     hull = ConvexHull(states_sliced)
-                except Exception as e: 
+                except Exception as e:
                     import matplotlib.pyplot as plt
                     # plt.plot(states_sliced)
                     plt.scatter(x=states_sliced[:,[0]],y=states_sliced[:,[1]])
@@ -331,6 +366,7 @@ class ReachableSetWrapper:
                     plt.legend()
                     plt.pause(.1)
 
+
             ## TODO: Analyse size of data
             def get_size(element):
                 binary = pickle.dumps(element, protocol=4)
@@ -361,6 +397,16 @@ class ReachableSetWrapper:
                     #self.debug('------> Element: {} \t size: {}'.format(
                     #    e, sys.getsize
                     #    ))
+
+        ti = time.time()
+        min_ttr_array = min_ttr_darray.compute()
+        self._debug('Min TTR computation took : ', time.time() - ti)
+        min_ttr_data = min_ttr_dataset.require_dataset(
+                "min_ttr",
+                min_ttr_array.shape,
+                dtype='f',
+                compression='gzip')
+        min_ttr_data[...] = min_ttr_array
 
         self._debug('Has initialised: ', self.group_subsets.keys())
         self._debug('Has initialised: (convexified) ', self.group_subsets_convexified.keys())
@@ -399,9 +445,10 @@ class ReachableSetWrapper:
         ## Retrieve general data groups (ds, dt)
         self.value_function = numpy.array(dask.array.from_array(data_handle['value_function']).transpose())
         ## TBD: self.gradient = dask.array.from_array(data['gradient'])
+        # self.grad = numpy.gradient(self.value_function)
         ## Available time discretisation indices
-        time = dask.array.from_array(data_handle['time']).compute()
-        self.time = numpy.squeeze(numpy.array(time).flatten())
+        time_array = dask.array.from_array(data_handle['time']).compute()
+        self.time = numpy.squeeze(numpy.array(time_array).flatten())
 
         ## Ensure time is increasing with indices
         if self.time[0] > self.time[-1]:
@@ -409,7 +456,6 @@ class ReachableSetWrapper:
 
         ## TODO: Find maximal ttr that is computed
         self.maximum_time_to_reach = self.time[-1]
-
         ## Initialise wrapper specific data groups
         ## Create wrapper data group to add datasets
         self.group_wrapper = data_handle.require_group("wrapper")
@@ -420,13 +466,16 @@ class ReachableSetWrapper:
         ## For illustration purposes
         # same as above : convexified states
         self.group_subsets_convexified = self.group_wrapper.require_group("subsets_convexified")
+        self.min_ttr_dataset = self.group_wrapper.require_group("min_ttr")
+        self.grad_dataset = self.group_wrapper.require_group("grad")
+
 
     def _debug(self, *args):
         """ Print debug messages if debugging is enabled. """
         if self.debug_is_enabled:
             print("LevelSetWrapper: ", *args)
 
-    def reach_at_t_idx(self, t_idx : int, convexified=True):
+    def reach_at_t_idx(self, t_idx : int, convexified=False):
         """ Return reachable state set at time_idx. """
         if convexified:
             return self.group_subsets_convexified[str(t_idx)][...]
@@ -434,7 +483,7 @@ class ReachableSetWrapper:
 
     def reach_at_t(self,
             t : float,
-            convexified=True):
+            convexified=False):
         """ Return reachable set at time t.
 
             Note:
@@ -445,9 +494,8 @@ class ReachableSetWrapper:
         t_idx = numpy.abs(ts - t).argmin()
 
         if t > self.time[-1]:
-            self._debug('State not reachable within time: {}'.format(
-                t))
-            raise pylevel.errors.StateNotReachableError()
+            self._debug('State not reachable within time: {}'.format(t))
+            raise pylevel.error.StateNotReachableError()
 
         return self.reach_at_t_idx(t_idx, convexified)
 
@@ -488,6 +536,14 @@ class ReachableSetWrapper:
 
         raise pylevel.error.StateNotReachableError()
 
+    def min_ttr(self, state : numpy.ndarray):
+        """ Return minimal time to reach discretized time.
+
+        This method is faster than reach_at_min_ttr, since it uses a
+        lookup table"""
+        index = self.grid.index_valid(state)
+        return self.ttr[index]
+
     def is_member(self, state: numpy.ndarray, return_time_to_reach=False) -> numpy.float:
         """ Return if state is not member of any reachable state sets. """
         index = self.grid.index_valid(state.flatten())
@@ -511,7 +567,6 @@ class ReachableSetWrapper:
         self._debug('ReachableSetWrapper: Failed to find index in any set.')
         raise pylevel.error.StateNotReachableError()
 
-
     def is_not_member(self, state: numpy.ndarray) -> numpy.float:
         """ Return if state is not member of any reachable state sets. """
 
@@ -520,53 +575,74 @@ class ReachableSetWrapper:
     def gradient(self,
             state: numpy.ndarray,
             ttr : float,
-            axes : typing.Optional[typing.List[int]] = None,
-            normalised : bool = False) -> numpy.ndarray:
+            axis : int) -> numpy.ndarray:
         """ Return gradient of current state for specified axes.
-
-            Note:
-                To only use directional information use the `normalised`
-                argument and return the gradient unit vector instead.
-
         """
-
-        ## TODO: Generating reach sets to debug
-        # Look up value function for grid
+        # TODO: normalized : bool = False)
+        axis = ((axis), )
         index = self.grid.index_valid(state)
+        time_index = ((numpy.abs(self.time - ttr)).argmin(),)
+        grad = self.grad[axis+index+time_index]
+        # grad = self.grad[axis][index + time_index]
+        # if normalized:
+            # if grad < 0.0:
+                # most_negative_grad = numpy.min(self.grad[axis])
+                # grad = grad / abs(most_negative_grad)
+            # elif grad > 0.0:
+                # most_positive_grad = numpy.max(self.grad[axis])
+                # grad = grad / most_positive_grad
+        return grad
 
-        ## Current state value function
-        time_index = tuple(numpy.where(self.time == ttr)[0])
-        v = self.value_function[index + time_index]
+    # def gradient_drone(self,
+            # state: numpy.ndarray,
+            # ttr : float,
+            # axes : typing.Optional[typing.List[int]] = None,
+            # normalised : bool = False) -> numpy.ndarray:
+        # """ Return gradient of current state for specified axes.
 
-        try:
-            ## List of neighbor indices (4)
-            # Amount of indices times state space dim: di x ds
-            indices, indices_delta = self.grid.index_neighbours(
-                    index, axes=axes, return_offset=True)
-        except IndexHasNoValidNeighboursError as e:
-            return numpy.zeros((2, 1))
+            # Note:
+                # To only use directional information use the `normalised`
+                # argument and return the gradient unit vector instead.
 
-        ## TODO: Remove me
-        # print('--> Index ({}) has {} neighbours: \n{}\n'.format(
-        #      index, len(indices), indices))
+        # """
 
-        ## di x 1 : scalar spatial magnitude for each index
-        dsi = numpy.linalg.norm(indices_delta * self.grid.dx, axis=1)
+        # ## TODO: Generating reach sets to debug
+        # # Look up value function for grid
+        # index = self.grid.index_valid(state)
 
-        ## di x 1 : value function differential for each index
-        vs = numpy.apply_along_axis(
-                lambda index: self.value_function[tuple(index) + time_index] - v, arr=indices, axis=1)
-        ## di x 1 / di x 1 : gradient for each index based on its spatial magnitude
-        gs = numpy.divide(vs, dsi)
-        vector = numpy.multiply(indices_delta[numpy.argmax(gs)], self.grid.dx)
+        # ## Current state value function
+        # time_index = tuple(numpy.where(self.time == ttr)[0])
+        # v = self.value_function[index + time_index]
 
-        ## TODO: Drone specific implementation for xy-plane
-        vector = numpy.array([vector[0], vector[2]])
-        if normalised:
-            n = numpy.linalg.norm(vector, ord=2)
-            if n == 0:
-                n = numpy.finfo(vector.dtype).eps
-            vector /= n
-        return vector
+        # try:
+            # ## List of neighbor indices (4)
+            # # Amount of indices times state space dim: di x ds
+            # indices, indices_delta = self.grid.index_neighbours(
+                    # index, axes=axes, return_offset=True)
+        # except IndexHasNoValidNeighboursError as e:
+            # return numpy.zeros((2, 1))
+
+        # ## TODO: Remove me
+        # # print('--> Index ({}) has {} neighbours: \n{}\n'.format(
+        # #      index, len(indices), indices))
+
+        # ## di x 1 : scalar spatial magnitude for each index
+        # dsi = numpy.linalg.norm(indices_delta * self.grid.dx, axis=1)
+
+        # ## di x 1 : value function differential for each index
+        # vs = numpy.apply_along_axis(
+                # lambda index: self.value_function[tuple(index) + time_index] - v, arr=indices, axis=1)
+        # ## di x 1 / di x 1 : gradient for each index based on its spatial magnitude
+        # gs = numpy.divide(vs, dsi)
+        # vector = numpy.multiply(indices_delta[numpy.argmax(gs)], self.grid.dx)
+
+        # ## TODO: Drone specific implementation for xy-plane
+        # # vector = numpy.array([vector[0], vector[2]])
+        # # if normalised:
+            # # n = numpy.linalg.norm(vector, ord=2)
+            # # if n == 0:
+                # # n = numpy.finfo(vector.dtype).eps
+            # # vector /= n
+        # return vector
 
 

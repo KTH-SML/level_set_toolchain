@@ -21,7 +21,7 @@ class LevelSet(enum.IntEnum):
 
 
 ## Example implementation of level sets for prominent dynamical systems
-class LevelSetExample(LevelSet, enum.IntEnum):
+class LevelSetExample(LevelSet):
     SVEA = 1
     Drone = 2
     DroneForesight = 3
