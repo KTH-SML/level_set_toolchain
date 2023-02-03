@@ -101,7 +101,7 @@ class ReachableSetWrapper:
     ## List of datasets with sparse boolean arrays
     group_subsets = attr.ib(default=None, type=typing.Optional[h5py.Group])
     ## List of datasets with sparse boolean arrays of convexified subsets
-    group_subsets_convexified = attr.ib(default=None, type=typing.Optional[h5py.Group])
+    # group_subsets_convexified = attr.ib(default=None, type=typing.Optional[h5py.Group])
 
     ## Gradient data
     grad_dataset = attr.ib(default=None, type=typing.Optional[h5py.Group])
@@ -321,7 +321,7 @@ class ReachableSetWrapper:
                         arr=indices).compute()
             self._debug('States took : ', time.time() - ti)
 
-            if True:
+            if False:
                 try:
                     ti = time.time()
                     ## Generate 2D projection of states
@@ -409,7 +409,7 @@ class ReachableSetWrapper:
         min_ttr_data[...] = min_ttr_array
 
         self._debug('Has initialised: ', self.group_subsets.keys())
-        self._debug('Has initialised: (convexified) ', self.group_subsets_convexified.keys())
+        # self._debug('Has initialised: (convexified) ', self.group_subsets_convexified.keys())
         self._debug('All sets initialised.')
 
     def _reset_datasets_of_index(self, time_index, wrapper_data_handle):
