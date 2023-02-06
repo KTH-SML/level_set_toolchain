@@ -231,7 +231,8 @@ class ReachableSetWrapper:
 
         ## Compute and store gradient
         ti = time.time()
-        vf = dask.array.from_array(state_set_data.at_all_time()).transpose()
+        vf = dask.array.from_array(state_set_data.at_all_time(),
+                                   self.value_function.T.shape).transpose()
         grad = numpy.array([gradient.compute()
                             for gradient in dask.array.gradient(vf)])
         self._debug('Gradient computation took : ', time.time() - ti)
