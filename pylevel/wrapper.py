@@ -544,7 +544,7 @@ class ReachableSetWrapper:
         index = self.grid.index_valid(state)
         return self.ttr[index]
 
-    def is_member(self, state: numpy.ndarray, return_time_to_reach=False) -> numpy.float:
+    def is_member(self, state: numpy.ndarray, return_time_to_reach=False) -> float:
         """ Return if state is not member of any reachable state sets. """
         index = self.grid.index_valid(state.flatten())
 
@@ -567,7 +567,7 @@ class ReachableSetWrapper:
         self._debug('ReachableSetWrapper: Failed to find index in any set.')
         raise pylevel.error.StateNotReachableError()
 
-    def is_not_member(self, state: numpy.ndarray) -> numpy.float:
+    def is_not_member(self, state: numpy.ndarray) -> float:
         """ Return if state is not member of any reachable state sets. """
 
         return not self.is_member(state)
